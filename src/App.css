@@ -1,0 +1,616 @@
+/* ── Reset & Base ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #f2f2f7;
+  color: #1a1a1a;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: #ec0029;
+  color: white;
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.header-bar {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo-img {
+  height: 28px;
+  filter: brightness(0) invert(1);
+}
+
+.header-nav {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.header-nav span {
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  padding-bottom: 2px;
+}
+
+.header-nav span:hover,
+.header-nav .nav-active {
+  opacity: 1;
+}
+
+.header-nav .nav-active {
+  border-bottom: 2px solid white;
+  font-weight: 600;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+}
+
+.header-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ── Dashboard ── */
+.dashboard {
+  max-width: 1280px;
+  margin: 28px auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .dashboard-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Cards ── */
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ── Info Card (right column) ── */
+.info-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px;
+}
+
+.greeting {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.info-text {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.info-text strong {
+  color: #1a1a1a;
+}
+
+.info-text-lg {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.7;
+}
+
+.info-text-lg strong {
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.btn-action {
+  background: #ec0029;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-action:hover {
+  background: #c70022;
+  transform: translateY(-1px);
+}
+
+/* ── Expenses ── */
+.expenses-layout {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.expenses-chart-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.expenses-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 180px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.legend-row:hover,
+.legend-row.legend-active {
+  background: #f8f8fa;
+  transform: scale(1.03);
+}
+
+.legend-bar {
+  width: 8px;
+  height: 32px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legend-pct {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a1a;
+  min-width: 48px;
+}
+
+.legend-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+
+.expenses-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  background: #fff5f5;
+  border: 1px solid #ffe3e3;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #555;
+}
+
+.expenses-alert strong {
+  color: #ec0029;
+}
+
+/* ── Stocks ── */
+.stocks-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.stocks-left {
+  min-width: 220px;
+}
+
+.stocks-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.stocks-chart-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.stocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.stock-row:hover,
+.stock-row.stock-row-active {
+  background: #f8f8fa;
+  transform: translateX(4px);
+}
+
+.stock-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stock-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+
+.stock-ticker {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.stock-name {
+  font-size: 11px;
+  color: #999;
+}
+
+.stock-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stock-up {
+  color: #20c997;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.stock-down {
+  color: #ec0029;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (max-width: 700px) {
+  .stocks-layout {
+    flex-direction: column;
+  }
+  .expenses-layout {
+    flex-direction: column;
+  }
+}
+
+/* ── FAB Button ── */
+.fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #ec0029;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(236, 0, 41, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 100;
+}
+
+.fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(236, 0, 41, 0.5);
+}
+
+/* ── Chatbot ── */
+.chatbot-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  box-shadow: -4px 0 32px rgba(0, 0, 0, 0.12);
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.chatbot-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chatbot-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.chatbot-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.chatbot-close:hover {
+  background: #f0f0f0;
+}
+
+.chatbot-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* ── Messages ── */
+.chatbot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fafafa;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  word-wrap: break-word;
+}
+
+.chat-bubble.bot {
+  background: #ec0029;
+  color: white;
+  align-self: flex-start;
+  border-bottom-left-radius: 6px;
+}
+
+.chat-bubble.user {
+  background: #e8e8e8;
+  color: #1a1a1a;
+  align-self: flex-end;
+  border-bottom-right-radius: 6px;
+}
+
+/* ── Typing indicator ── */
+.typing-indicator {
+  display: flex;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: bounce 1.2s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ── Input area ── */
+.chatbot-input-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: white;
+}
+
+.chatbot-input {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chatbot-input:focus {
+  border-color: #ec0029;
+}
+
+.chatbot-send {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ec0029;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.chatbot-send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.chatbot-send:not(:disabled):hover {
+  background: #c70022;
+}
+
+/* ── Bubble entrance animation ── */
+.bubble-enter {
+  animation: bubbleIn 0.3s ease-out;
+}
+
+@keyframes bubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Streaming cursor blink ── */
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Custom Stock Tooltip ── */
+.stock-tooltip {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+}
+
+.stock-tooltip-label {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.stock-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: #555;
+}
+
+.stock-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stock-tooltip-val {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ── Responsive chatbot ── */
+@media (max-width: 480px) {
+  .chatbot-overlay {
+    width: 100%;
+  }
+}
