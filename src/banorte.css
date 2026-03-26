@@ -1,0 +1,46 @@
+/*
+    ===== FONTS =====
+*/
+/* Gotham */
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Book.otf");
+    font-weight: 1 450;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Medium.otf");
+    font-weight: 450 600;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Bold.otf");
+    font-weight: 600 100;
+    font-style: normal;
+    font-display: block;
+}
+
+/* Roboto */
+@font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/roboto/Roboto-VariableFont_wdth\,wght.ttf");
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: block;
+}
+
+/* Gotham specificity */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Gotham";
+}
+
+/* Roboto specificity */
+* {
+    font-family: "Roboto";
+}
