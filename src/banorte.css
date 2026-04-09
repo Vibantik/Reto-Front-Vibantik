@@ -1,0 +1,68 @@
+/*
+    ===== FONTS =====
+*/
+/* Gotham */
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Book.otf");
+    font-weight: 1 450;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Medium.otf");
+    font-weight: 450 600;
+    font-style: normal;
+    font-display: block;
+}
+
+@font-face {
+    font-family: "Gotham";
+    src: url("assets/fonts/gotham/Gotham-Bold.otf");
+    font-weight: 600 100;
+    font-style: normal;
+    font-display: block;
+}
+
+/* Roboto */
+@font-face {
+    font-family: "Roboto";
+    src: url("assets/fonts/roboto/Roboto-VariableFont_wdth\,wght.ttf");
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: block;
+}
+
+/* Gotham specificity */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Gotham";
+}
+
+/* Roboto specificity */
+* {
+    font-family: "Roboto";
+}
+
+/*
+    ===== COLORS =====
+*/
+:root {
+    --banorte-red: #EB0029;
+    --banorte-gray: #5B6670;
+    --banorte-white: #FFFFFF;
+    --banorte-dark-gray: #323E48;
+    --banorte-content-2: #7B868C;
+    --banorte-content-3: #A2A9AD;
+    --banorte-content-4: #C1C5C8;
+    --banorte-content-5: #CFD2D3;
+    --banorte-background: #EBF0F2;
+    --banorte-background-2: #F4F7F8;
+    --banorte-background-3: #FCFCFC;
+    --banorte-success: #6CC04A;
+    --banorte-alert: #FF671B;
+    --banorte-warning: #FFA400;
+    --banorte-background-gradient: linear-gradient(#EBF0F2, #F4F7F8);
+    --banorte-content-5-gradient: linear-gradient(#CFD2D3, #E7E9E9);
+}

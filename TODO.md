@@ -1,0 +1,2 @@
+- [ ] Convert fonts to WOFF2 (https://web.dev/articles/font-best-practices#use_woff2)
+- [ ] Host fonts in CDN (https://web.dev/articles/font-best-practices#use_self-hosted_fonts)
