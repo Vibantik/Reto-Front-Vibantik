@@ -1,4 +1,5 @@
-import { ArrowUpRight, ChevronRight, RefreshCcw } from "lucide-react";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
+import transactionIcon from "../assets/transaccion.png";
 
 function TransactionItem({ transaction }) {
   const isIncome = transaction.type === "ingreso";
@@ -7,7 +8,11 @@ function TransactionItem({ transaction }) {
     <article className="transaction-card">
       <div className="transaction-card__left">
         <div className="transaction-card__avatar">
-          <RefreshCcw size={20} />
+          <img
+            src={transactionIcon}
+            alt="Icono de transacción"
+            className="transaction-card__avatar-image"
+          />
         </div>
 
         <div className="transaction-card__info">
