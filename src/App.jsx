@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import ExpensesChart from "./components/ExpensesChart";
 import StocksPanel from "./components/StocksPanel";
 import Chatbot from "./components/Chatbot";
+import TransactionsPanel from "./components/TransactionsPanel";
 import "./App.css";
 
 export default function App() {
@@ -14,7 +15,6 @@ export default function App() {
       <Header />
 
       <main className="dashboard">
-        {/* Row 1: Expenses + Greeting Card */}
         <div className="dashboard-row">
           <ExpensesChart />
           <div className="card info-card">
@@ -26,7 +26,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Row 2: Stocks + Investment Info */}
         <div className="dashboard-row">
           <StocksPanel />
           <div className="card info-card">
@@ -36,6 +35,10 @@ export default function App() {
             </p>
             <button className="btn-action">Reinvertir &gt;&gt;</button>
           </div>
+        </div>
+
+        <div className="dashboard-row transactions-row">
+          <TransactionsPanel />
         </div>
       </main>
 
