@@ -17,7 +17,7 @@ export function useChatbot() {
   const messagesEndRef = useRef(null);
   const abortRef = useRef(null);
 
-  // ── Auto-scroll ──────────────────────────────────────────────────────────────
+  // auto scroll
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -41,6 +41,7 @@ export function useChatbot() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // system prompt + history of convo = context 
     try {
       const res = await fetch(OLLAMA_URL, {
         method: "POST",
