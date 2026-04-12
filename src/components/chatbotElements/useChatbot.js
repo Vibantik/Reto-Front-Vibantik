@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { OLLAMA_URL, MODEL, SYSTEM_PROMPT } from "./config";
+import { sanitize } from "./sanitizer";
 
 const INITIAL_MESSAGES = [
   {
@@ -28,10 +29,24 @@ export function useChatbot() {
 
   // send messaje
   const sendMessage = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+    const raw = input.trim();
+    if (!raw || loading) return;
 
-    const userMsg = { role: "user", content: text };
+    // sanitizar en front
+    const { safe, text, reason } = sanitize(raw);
+
+    if (!safe) {
+      // muestra intento del usuario, luego bot bloquea
+      setMessages((prev) => [
+        ...prev,
+        { role: "user",      content: raw    },
+        { role: "assistant", content: reason },
+      ]);
+      setInput("");
+      return;
+    }
+   
+    const userMsg = { role: "user", content: text };   // texto limpio
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
