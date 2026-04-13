@@ -3,10 +3,12 @@ import TransactionSearch from "./TransactionSearch";
 import TransactionFilters from "./TransactionFilters";
 import TransactionList from "./TransactionList";
 import Pagination from "./Pagination";
+import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
 function TransactionsPanel() {
   const [transactions, setTransactions] = useState([]);
+  const [monthlyTransactions, setMonthlyTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -56,6 +58,37 @@ function TransactionsPanel() {
     fetchTransactions();
   }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
+  useEffect(() => {
+    const fetchMonthlyFlow = async () => {
+      try {
+        const now = new Date();
+        const month = now.getMonth();
+        const year = now.getFullYear();
+
+        const firstDay = new Date(year, month, 1).toISOString().slice(0, 10);
+        const lastDay = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+
+        const params = new URLSearchParams({
+          page: 1,
+          limit: 300,
+          startDate: firstDay,
+          endDate: lastDay,
+        });
+
+        const response = await fetch(
+          `http://localhost:3000/api/transactions?${params.toString()}`
+        );
+
+        const result = await response.json();
+        setMonthlyTransactions(result.data || []);
+      } catch (error) {
+        console.error("Error al obtener flujo mensual:", error);
+      }
+    };
+
+    fetchMonthlyFlow();
+  }, []);
+
   return (
     <section className="transactions-screen">
       <div className="transactions-header">
@@ -85,6 +118,8 @@ function TransactionsPanel() {
           setEndDate={setEndDate}
         />
       </div>
+
+      <CashflowChart transactions={monthlyTransactions} />
 
       <TransactionList transactions={transactions} />
 
