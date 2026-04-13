@@ -6,7 +6,7 @@ import Pagination from "./Pagination";
 import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
-function TransactionsPanel() {
+function TransactionsPanel({ showChart = true }) {
   const [transactions, setTransactions] = useState([]);
   const [monthlyTransactions, setMonthlyTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -119,7 +119,7 @@ function TransactionsPanel() {
         />
       </div>
 
-      <CashflowChart transactions={monthlyTransactions} />
+      {showChart && <CashflowChart transactions={monthlyTransactions} />}
 
       <TransactionList transactions={transactions} />
 
