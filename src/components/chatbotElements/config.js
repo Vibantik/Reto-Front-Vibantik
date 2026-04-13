@@ -1,5 +1,5 @@
 export const OLLAMA_URL = "http://localhost:11434/api/chat";
-export const MODEL = "qwen3.5:2b";
+export const MODEL = "gemma4:e4b";
 
 export const SYSTEM_PROMPT = `Eres Aura, el asistente virtual inteligente de Banorte.
 Ayudas a los clientes con consultas sobre sus cuentas bancarias, gastos, inversiones y servicios financieros.

@@ -9,14 +9,42 @@ const INITIAL_MESSAGES = [
   },
 ];
 
+// *!!!!!!!! OJO eliminar cuando el UUID venga de autenticación real
+const TEMP_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
+
 export function useChatbot() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const abortRef = useRef(null);
+  
+  // crear conversation
+  useEffect(() => {
+    // ?uuid=<uuid_de_usuario>
+    const params = new URLSearchParams(window.location.search);
+    const uuid_de_usuario = params.get("uuid") ?? TEMP_UUID;
+
+    const initConversation = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/chat/conversation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uuid_de_usuario }) 
+        });
+        const data = await res.json();
+        if (data.id_conv) {
+          setConversationId(data.id_conv);
+        }
+      } catch (err) {
+        console.error("Error al iniciar la conversación en el backend:", err);
+      }
+    };
+    initConversation();
+  }, []);
 
   // auto scroll
   const scrollToBottom = useCallback(() => {
@@ -106,6 +134,24 @@ export function useChatbot() {
         { role: "assistant", content: accumulated },
       ]);
       setStreamingText("");
+
+      // guardar mensaje del usuario y la respuesta !check ID de conversacion y respuesta valida
+      if (conversationId && accumulated.trim()) {
+        try {
+          await fetch("http://localhost:3000/api/chat/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id_conv: conversationId,
+              mensaje_usuario: text,
+              respuesta_ia: accumulated
+            }),
+          });
+        } catch (postErr) {
+          console.error("Error guardando el mensaje:", postErr);
+        }
+      }
+
     } catch (err) {
       if (err.name === "AbortError") return;
       setStreamingText("");
