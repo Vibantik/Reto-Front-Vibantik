@@ -1,6 +1,6 @@
 import banorteLogo from "../assets/banorte-logo.png";
 
-export default function Header({ activeTab, onTabChange }) {
+export default function Header({ activeTab, onTabChange, toggleSidebar }) {
   const tabs = ["Inicio", "Cuentas", "Inversiones", "Transferencias", "Movimientos"];
 
   return (
@@ -22,7 +22,7 @@ export default function Header({ activeTab, onTabChange }) {
           ))}
         </nav>
         <div className="header-user">
-          <div className="header-avatar">R</div>
+          <div className="header-avatar" onClick={toggleSidebar} style={{ cursor: 'pointer' }} title="Configuración">R</div>
         </div>
       </div>
     </header>
