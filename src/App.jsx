@@ -11,7 +11,7 @@ import Sidebar from "./components/Sidebar";
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Inicio");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeTab) {

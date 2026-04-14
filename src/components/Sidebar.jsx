@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
+import { fetchUserSettings, saveUserSettings } from '../services/configService';
 import './css/Sidebar.css';
 import '../App.css';
 
@@ -10,7 +11,7 @@ const MOCK_CONFIG_DATA = [
     { id: 4, label: 'Mostrar Ahorros Terminados', defaultState: true },
     { id: 5, label: 'Reportes Inteligentes', defaultState: true },
     { id: 6, label: 'Asesor IA', defaultState: true },
-    { id: 7, label: 'Mensajes de Asesor IA', defaultState: true },
+    { id: 7, label: 'Alertas de Asesor IA', defaultState: true },
 ];
 
 const settingsData = MOCK_CONFIG_DATA;
@@ -24,8 +25,28 @@ export default function Sidebar({ isOpen }) {
         return initialState;
     });
 
+    useEffect(() => {
+        const loadSettings = async () => {
+            const settingsFromServer = await fetchUserSettings('dbf9f839-b57e-415f-8b5b-9213524ed827');
+
+            if (settingsFromServer) {
+                setToggles(settingsFromServer);
+            }
+        };
+
+        loadSettings();
+    }, []);
+
     const handleToggle = (key) => {
         setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handleSave = async () => {
+        const success = await saveUserSettings('dbf9f839-b57e-415f-8b5b-9213524ed827', toggles);
+
+        if (!success) {
+            alert('Hubo un error al guardar.');
+        }
     };
 
     return (
@@ -49,7 +70,13 @@ export default function Sidebar({ isOpen }) {
                         </li>
                     ))}
                 </ul>
-                <button className="btn-action" style={{ marginLeft: '20px', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}><Save /> Guardar</button>
+                <button
+                    className="btn-action"
+                    onClick={handleSave}
+                    style={{ marginLeft: '20px', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+                >
+                    <Save /> Guardar
+                </button>
             </div>
         </>
     );
