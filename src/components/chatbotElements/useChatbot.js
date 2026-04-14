@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { OLLAMA_URL, MODEL, SYSTEM_PROMPT } from "./config";
 import { sanitize } from "./sanitizer";
 
 const INITIAL_MESSAGES = [
@@ -84,27 +83,21 @@ export function useChatbot() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // system prompt + history of convo = context 
     try {
-      const res = await fetch(OLLAMA_URL, {
+      const res = await fetch("http://localhost:3000/api/ia/agentic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...updatedMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-          ],
-          stream: true,
+          messages: updatedMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
         }),
         signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error("Error al conectar con Ollama");
-
+      if (!res.ok) throw new Error("Error al conectar con el backend");
+ 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = "";
@@ -160,7 +153,7 @@ export function useChatbot() {
         {
           role: "assistant",
           content:
-            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama esté corriendo en localhost:11434.",
+            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama esté corriendo",
         },
       ]);
     } finally {
