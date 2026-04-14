@@ -6,10 +6,12 @@ import StocksPanel from "./components/StocksPanel";
 import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import "./App.css";
+import Sidebar from "./components/Sidebar";
 
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Inicio");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -59,9 +61,14 @@ export default function App() {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="app">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} />
 
       {renderContent()}
 
