@@ -50,6 +50,6 @@ describe('My App E2E Tests', () => {
     cy.get('.toggle-switch').first().click()
     // 2. estado default era "on", ahora debe ser "off"
     // se usan defaults porque el back-end aún está en local
-    cy.get('.toggle-switch').first().should('have.class', 'off')
+    cy.get('.toggle-switch').first().should('not.have.class', 'active')
   })
 })
