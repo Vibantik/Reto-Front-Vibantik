@@ -12,7 +12,7 @@ describe('My App E2E Tests', () => {
 
   //va a root
   beforeEach(() => {
-    cy.visit('/')
+    cy.visit('http://localhost:5173/')
   })
 
   it('loads the homepage successfully', () => {
