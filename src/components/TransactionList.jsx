@@ -9,7 +9,11 @@ function TransactionList({ transactions }) {
   };
 
   if (transactions.length === 0) {
-    return <p className="empty-state">No se encontraron transacciones.</p>;
+    return (
+      <p data-cy="transaction-empty" className="empty-state">
+        No se encontraron transacciones.
+      </p>
+    );
   }
 
   return (
