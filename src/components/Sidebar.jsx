@@ -71,7 +71,7 @@ export default function Sidebar({ isOpen }) {
                     ))}
                 </ul>
                 <button
-                    className="btn-action"
+                    className="btn-save btn-action"
                     onClick={handleSave}
                     style={{ marginLeft: '20px', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}
                 >
