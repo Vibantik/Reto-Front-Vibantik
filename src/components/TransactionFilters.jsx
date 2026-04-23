@@ -13,6 +13,7 @@ function TransactionFilters({
       <div className="filter-group">
         <label>Tipo</label>
         <select
+          data-cy="transaction-type-filter"
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
         >
@@ -25,6 +26,7 @@ function TransactionFilters({
       <div className="filter-group">
         <label>Categoría</label>
         <select
+          data-cy="transaction-category-filter"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
         >
@@ -39,6 +41,7 @@ function TransactionFilters({
       <div className="filter-group">
         <label>Desde</label>
         <input
+          data-cy="transaction-start-date"
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
@@ -48,6 +51,7 @@ function TransactionFilters({
       <div className="filter-group">
         <label>Hasta</label>
         <input
+          data-cy="transaction-end-date"
           type="date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}

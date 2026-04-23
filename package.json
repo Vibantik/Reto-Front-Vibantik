@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:transactions": "cypress run --spec cypress/e2e/transactions.cy.js"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",

@@ -6,7 +6,10 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
   const isIncome = transaction.type === "ingreso";
 
   return (
-    <article className={`transaction-card ${isExpanded ? "expanded" : ""}`}>
+    <article
+      data-cy="transaction-card"
+      className={`transaction-card ${isExpanded ? "expanded" : ""}`}
+    >
       <div className="transaction-card__summary">
         <div className="transaction-card__left">
           <div className="transaction-card__avatar">
@@ -37,10 +40,15 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
           </span>
 
           <button
+            data-cy="transaction-toggle"
             type="button"
             className={`transaction-chevron-btn ${isExpanded ? "open" : ""}`}
             onClick={onToggle}
-            aria-label={isExpanded ? "Ocultar detalle del movimiento" : "Ver detalle del movimiento"}
+            aria-label={
+              isExpanded
+                ? "Ocultar detalle del movimiento"
+                : "Ver detalle del movimiento"
+            }
             aria-expanded={isExpanded}
           >
             <ChevronRight size={24} className="transaction-chevron" />
