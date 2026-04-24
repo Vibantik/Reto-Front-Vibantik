@@ -1,0 +1,135 @@
+.inversiones-screen {
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.inversiones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.inversiones-kicker {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.inversiones-header h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+.inversiones-total {
+  text-align: right;
+}
+
+.inversiones-total p {
+  margin: 0;
+}
+
+.inversiones-total .label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.inversiones-total .monto {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.inversiones-total .ganancia {
+  font-size: 0.85rem;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.inversiones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.inversion-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  color: #1a1a1a;
+}
+
+.inversion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.inversion-nombre {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.inversion-tipo {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.inversion-estatus {
+  font-size: 0.68rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.estatus-activa  { background: #dcfce7; color: #16a34a; }
+.estatus-vencida { background: #fee2e2; color: #dc2626; }
+
+.inversion-monto {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.inversion-detalles {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.75rem;
+}
+
+.inversion-detalles strong {
+  display: block;
+  color: #1a1a1a;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.inversion-progreso-bar {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.inversion-progreso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c8102e, #e10600);
+  border-radius: 999px;
+}

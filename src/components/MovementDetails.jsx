@@ -4,16 +4,16 @@ function MovementDetails({ transaction }) {
 	const amountPrefix = isIncome ? "+" : "-";
 	const status = transaction.status || "Aplicado";
 
-	const movementDate = transaction.date
-		? new Date(`${transaction.date}T12:00:00`)
-				.toLocaleDateString("es-MX", {
-					weekday: "short",
-					day: "2-digit",
-					month: "short",
-					year: "numeric",
-				})
-				.replace(".", "")
-		: "No disponible";
+const movementDate = transaction.date
+  ? new Date(transaction.date.slice(0, 10) + "T12:00:00")
+      .toLocaleDateString("es-MX", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .replace(".", "")
+  : "No disponible";
 
 	const movementTime = transaction.time || "12:00";
 
