@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import transactionsData from "../data/transactions";
+// src/components/TransactionsPanel.jsx
+import { useEffect, useState, useMemo } from "react";
+import { fetchTransactions } from "../services/transactionsService";
 import TransactionSearch from "./TransactionSearch";
 import TransactionFilters from "./TransactionFilters";
 import TransactionList from "./TransactionList";
@@ -7,92 +8,64 @@ import Pagination from "./Pagination";
 import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
-const ITEMS_PER_PAGE = 15;
-
 function TransactionsPanel({ showChart = true }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("all");
+  const [searchTerm, setSearchTerm]           = useState("");
+  const [selectedType, setSelectedType]       = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [startDate, setStartDate]             = useState("");
+  const [endDate, setEndDate]                 = useState("");
+  const [currentPage, setCurrentPage]         = useState(1);
 
+  const [transactions, setTransactions]   = useState([]);
+  const [pagination, setPagination]       = useState({
+    page: 1, limit: 15, totalItems: 0, totalPages: 1,
+    hasNextPage: false, hasPrevPage: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  // Resetear página al cambiar filtros
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
-  const filteredTransactions = useMemo(() => {
-    return transactionsData.filter((transaction) => {
-      if (selectedType !== "all" && transaction.type !== selectedType) {
-        return false;
+  // Fetch al backend cada vez que cambia página o filtros
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await fetchTransactions({
+          page: currentPage,
+          limit: 15,
+          type: selectedType,
+          category: selectedCategory,
+          search: searchTerm,
+          startDate,
+          endDate,
+        });
+        setTransactions(result.data);
+        setPagination(result.pagination);
+      } catch (err) {
+        setError("No se pudieron cargar las transacciones.");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
+    };
+    load();
+  }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
-      if (
-        selectedCategory !== "all" &&
-        transaction.category !== selectedCategory
-      ) {
-        return false;
-      }
-
-      if (searchTerm) {
-        const searchText = searchTerm.toLowerCase();
-        const descriptionMatch = transaction.description
-          .toLowerCase()
-          .includes(searchText);
-        const amountMatch = transaction.amount
-          .toString()
-          .includes(searchText);
-        if (!descriptionMatch && !amountMatch) {
-          return false;
-        }
-      }
-
-      if (startDate) {
-        const transactionDate = new Date(transaction.date);
-        const start = new Date(startDate);
-        if (transactionDate < start) {
-          return false;
-        }
-      }
-
-      if (endDate) {
-        const transactionDate = new Date(transaction.date);
-        const end = new Date(endDate);
-        if (transactionDate > end) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [searchTerm, selectedType, selectedCategory, startDate, endDate]);
-
-  const totalItems = filteredTransactions.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-  const currentTransactions = filteredTransactions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
+  // Para el chart sólo usamos las transacciones del mes ya cargadas  
   const monthlyTransactions = useMemo(() => {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-
-    return transactionsData.filter((transaction) => {
-      const date = new Date(transaction.date);
-      return date.getFullYear() === year && date.getMonth() === month;
-    });
-  }, []);
-
-  const pagination = {
-    page: currentPage,
-    limit: ITEMS_PER_PAGE,
-    totalItems,
-    totalPages,
-    hasNextPage: currentPage < totalPages,
-    hasPrevPage: currentPage > 1,
-  };
+  const now = new Date();
+  return transactions.filter((t) => {
+    // Tomar solo YYYY-MM-DD ignorando timezone
+    const dateStr = t.date.slice(0, 10);
+    const [year, month] = dateStr.split("-").map(Number);
+    return year === now.getFullYear() && month === now.getMonth() + 1;
+  });
+}, [transactions]);
 
   return (
     <section className="transactions-screen">
@@ -102,31 +75,25 @@ function TransactionsPanel({ showChart = true }) {
           <h2>Movimientos</h2>
         </div>
         <span className="transactions-counter">
-          {pagination.totalItems || 0} resultados
+          {pagination.totalItems} resultados
         </span>
       </div>
 
       <div className="transactions-toolbar">
-        <TransactionSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-
+        <TransactionSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <TransactionFilters
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
+          selectedType={selectedType}       setSelectedType={setSelectedType}
+          selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
+          startDate={startDate}             setStartDate={setStartDate}
+          endDate={endDate}                 setEndDate={setEndDate}
         />
       </div>
 
       {showChart && <CashflowChart transactions={monthlyTransactions} />}
 
-      <TransactionList transactions={currentTransactions} />
+      {loading && <p style={{ padding: "1rem" }}>Cargando transacciones...</p>}
+      {error   && <p style={{ padding: "1rem", color: "red" }}>{error}</p>}
+      {!loading && !error && <TransactionList transactions={transactions} />}
 
       <Pagination
         currentPage={pagination.page}

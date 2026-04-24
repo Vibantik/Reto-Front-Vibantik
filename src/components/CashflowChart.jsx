@@ -60,7 +60,7 @@ export default function CashflowChart({ transactions }) {
     transactions.forEach((transaction) => {
       if (!transaction.date) return;
 
-      const txDate = new Date(`${transaction.date}T12:00:00`);
+    const txDate = new Date(transaction.date.slice(0, 10) + "T12:00:00");
       if (Number.isNaN(txDate.getTime())) return;
       if (txDate.getMonth() !== month || txDate.getFullYear() !== year) return;
 

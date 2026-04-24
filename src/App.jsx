@@ -5,8 +5,9 @@ import ExpensesChart from "./components/ExpensesChart";
 import StocksPanel from "./components/StocksPanel";
 import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
-import "./App.css";
+import InversionesPanel from "./components/InversionesPanel";
 import Sidebar from "./components/Sidebar";
+import "./App.css";
 
 export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
@@ -28,7 +29,6 @@ export default function App() {
                 <button className="btn-action">Revisar sugerencias &gt;&gt;</button>
               </div>
             </div>
-
             <div className="dashboard-row">
               <StocksPanel />
               <div className="card info-card">
@@ -45,7 +45,15 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <TransactionsPanel />
+              <TransactionsPanel showChart={true} />
+            </div>
+          </main>
+        );
+      case "Inversiones":
+        return (
+          <main className="dashboard">
+            <div className="dashboard-row transactions-row">
+              <InversionesPanel />
             </div>
           </main>
         );
@@ -61,9 +69,7 @@ export default function App() {
     }
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
     <div className="app">

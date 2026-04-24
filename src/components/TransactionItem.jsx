@@ -23,8 +23,11 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
           <div className="transaction-card__info">
             <h4>{transaction.description}</h4>
             <p>{transaction.category}</p>
-            <span>{transaction.date}</span>
-          </div>
+<span>
+  {new Date(transaction.date.slice(0, 10) + "T12:00:00").toLocaleDateString("es-MX", {
+    day: "2-digit", month: "short", year: "numeric"
+  })}
+</span>          </div>
         </div>
 
         <div className="transaction-card__right">
