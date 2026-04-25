@@ -1,5 +1,5 @@
 import React from 'react'
-import Chatbot from './Chatbot'
+import Chatbot from '../../src/components/Chatbot'
 
 describe('<Chatbot />', () => {
   it('renders', () => {

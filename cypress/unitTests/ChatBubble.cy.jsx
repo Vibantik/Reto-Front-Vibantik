@@ -1,5 +1,5 @@
 import React from 'react'
-import ChatBubble from './ChatBubble'
+import ChatBubble from '../../src/components/chatbotElements/ChatBubble'
 
 describe('<ChatBubble />', () => {
   it('renders', () => {
