@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { sanitize } from "./sanitizer";
+import { getUserUuid } from "../../utils/userUuid";
 
 const INITIAL_MESSAGES = [
   {
@@ -7,9 +8,6 @@ const INITIAL_MESSAGES = [
     content: "¡Hola! Soy Aura, tu asistente virtual de Banorte. ¿En qué puedo ayudarte hoy?",
   },
 ];
-
-// *!!!!!!!! OJO eliminar cuando el UUID venga de autenticación real
-const TEMP_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
 
 export function useChatbot() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -23,9 +21,7 @@ export function useChatbot() {
   
   // crear conversation
   useEffect(() => {
-    // ?uuid=<uuid_de_usuario>
-    const params = new URLSearchParams(window.location.search);
-    const uuid_de_usuario = params.get("uuid") ?? TEMP_UUID;
+    const uuid_de_usuario = getUserUuid();
 
     const initConversation = async () => {
       try {
