@@ -6,7 +6,7 @@ import StocksPanel from "./components/StocksPanel";
 import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import InversionesPanel from "./components/InversionesPanel";
-import PresupuestosPanel from "";
+import PresupuestosPanel from "./components/Presupuestos/PresupuestosPanel";
 import Sidebar from "./components/Sidebar";
 import "./App.css";
 

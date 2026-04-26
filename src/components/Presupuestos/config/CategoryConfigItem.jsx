@@ -1,0 +1,110 @@
+// Cada linea dentro de categoryConfigView
+// Cambia icon, nombre, limte, orden y borrar
+
+import { GripVertical, Trash2 } from "lucide-react";
+import { ICON_MAP } from "../presupuestos.data.js";
+import { fmt } from "../utils/presupuestos.utils.js";
+
+
+export default function CategoryConfigItem({
+  cat,
+  index,
+  total,
+  isHighlighted,
+  onUpdate,
+  onDelete,
+  onMove,
+  onIconClick,
+}) {
+  const Icon = ICON_MAP[cat.icon] || ICON_MAP["zap"];
+
+  return (
+    <div
+      id={`pres-config-item-${cat.id}`}
+      className={`pres-config-item${isHighlighted ? " highlighted" : ""}`}
+    >
+      {/* ! TODO: Drag handle (rn solo visual ) */}
+      <span className="pres-config-item__drag" title="Arrastrar para reordenar">
+        <GripVertical size={20} />
+      </span>
+
+      {/* Icon picker trigger */}
+      <button
+        id={`pres-icon-btn-${cat.id}`}
+        className="pres-config-item__icon-btn"
+        style={{ background: cat.color }}
+        title="Cambiar icono"
+        onClick={() => onIconClick(cat.id)}
+      >
+        <Icon size={20} />
+      </button>
+
+      {/* Nombre y presupuesto */}
+      <div className="pres-config-item__fields">
+        <input
+          id={`pres-cat-name-${cat.id}`}
+          className="pres-config-item__name-input"
+          value={cat.nombre}
+          placeholder="Nombre de categoría"
+          onChange={(e) => onUpdate(cat.id, "nombre", e.target.value)}
+        />
+        <div className="pres-config-item__budget-row">
+          <span>$</span>
+          <input
+            id={`pres-cat-budget-${cat.id}`}
+            className="pres-config-item__budget-input"
+            type="number"
+            min={0}
+            value={cat.monto_limite}
+            onChange={(e) => onUpdate(cat.id, "monto_limite", Number(e.target.value))}
+          />
+          <span style={{ marginLeft: "auto", color: "#a2a9ad" }}>
+            /{cat.monto_limite > 0 ? fmt(cat.monto_limite) : "sin límite"}
+          </span>
+        </div>
+      </div>
+
+      {/* Up / Down botones*/}
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <button
+          title="Subir"
+          disabled={index === 0}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: index === 0 ? "default" : "pointer",
+            color: index === 0 ? "#cfd2d3" : "#7B868C",
+            padding: 2,
+          }}
+          onClick={() => index > 0 && onMove(index, index - 1)}
+        >
+          ▲
+        </button>
+        <button
+          title="Bajar"
+          disabled={index === total - 1}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: index === total - 1 ? "default" : "pointer",
+            color: index === total - 1 ? "#cfd2d3" : "#7B868C",
+            padding: 2,
+          }}
+          onClick={() => index < total - 1 && onMove(index, index + 1)}
+        >
+          ▼
+        </button>
+      </div>
+
+      {/* Delete */}
+      <button
+        id={`pres-cat-delete-${cat.id}`}
+        className="pres-config-item__delete-btn"
+        title="Eliminar categoría"
+        onClick={() => onDelete(cat.id)}
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
+}
