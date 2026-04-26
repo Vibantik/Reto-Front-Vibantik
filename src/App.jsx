@@ -57,6 +57,8 @@ export default function App() {
             </div>
           </main>
         );
+      case "Metas":
+        return <main className="dashboard"></main>;
       default:
         return (
           <main className="dashboard">
