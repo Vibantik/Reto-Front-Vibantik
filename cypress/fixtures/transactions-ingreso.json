@@ -1,0 +1,10 @@
+{
+  "data": [
+    { "id": 3, "date": "2026-04-09", "description": "Nomina Banorte", "category": "Ingreso", "type": "ingreso", "amount": 12000 },
+    { "id": 7, "date": "2026-04-07", "description": "Freelance", "category": "Ingreso", "type": "ingreso", "amount": 3500 },
+    { "id": 12, "date": "2026-04-05", "description": "Transferencia recibida", "category": "Ingreso", "type": "ingreso", "amount": 2500 },
+    { "id": 16, "date": "2026-04-03", "description": "Pago recibido", "category": "Ingreso", "type": "ingreso", "amount": 4200 },
+    { "id": 20, "date": "2026-04-01", "description": "Deposito", "category": "Ingreso", "type": "ingreso", "amount": 1800 }
+  ],
+  "pagination": { "page": 1, "limit": 15, "totalItems": 5, "totalPages": 1, "hasNextPage": false, "hasPrevPage": false }
+}
