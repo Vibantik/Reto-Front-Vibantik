@@ -4,6 +4,13 @@ import { createMeta, deleteMeta, fetchMetas, updateMeta } from "../services/meta
 import "./css/metas.css";
 
 const USER_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
+const ITEMS_PER_PAGE = 10;
+const SECTION_DEFINITIONS = [
+  { key: "enCurso", title: "Objetivos activos" },
+  { key: "completadas", title: "Objetivos logrados" },
+  { key: "finalizadasCompletadas", title: "Objetivos vencidos logrados" },
+  { key: "finalizadasNoCompletadas", title: "Objetivos vencidos pendientes" },
+];
 
 const fmtCurrency = (value) =>
   Number(value).toLocaleString("es-MX", {
@@ -23,6 +30,36 @@ const fmtDate = (value) => {
   });
 };
 
+const categorizeMetas = (metas, todayInput) => {
+  const today = new Date(`${todayInput}T00:00:00`);
+
+  const buckets = {
+    enCurso: [],
+    completadas: [],
+    finalizadasCompletadas: [],
+    finalizadasNoCompletadas: [],
+  };
+
+  metas.forEach((meta) => {
+    const progreso = Number(meta.progreso ?? 0);
+    const isCompleted = progreso >= 1;
+    const fechaFinDate = meta.fechaFin ? new Date(`${String(meta.fechaFin).slice(0, 10)}T00:00:00`) : null;
+    const isFinalizada = Boolean(fechaFinDate && fechaFinDate < today);
+
+    if (!isFinalizada && !isCompleted) {
+      buckets.enCurso.push(meta);
+    } else if (!isFinalizada && isCompleted) {
+      buckets.completadas.push(meta);
+    } else if (isFinalizada && isCompleted) {
+      buckets.finalizadasCompletadas.push(meta);
+    } else {
+      buckets.finalizadasNoCompletadas.push(meta);
+    }
+  });
+
+  return buckets;
+};
+
 function MetasPanel() {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -33,12 +70,22 @@ function MetasPanel() {
   const [deletingId, setDeletingId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingMetaId, setEditingMetaId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     nombreMeta: "",
     monto: "",
     fechaInicio: "",
     fechaFin: "",
   });
+
+  const todayInput = useMemo(() => {
+    const now = new Date();
+    const local = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yyyy = local.getFullYear();
+    const mm = String(local.getMonth() + 1).padStart(2, "0");
+    const dd = String(local.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -63,6 +110,39 @@ function MetasPanel() {
     () => metas.reduce((sum, meta) => sum + Number(meta.monto || 0), 0),
     [metas]
   );
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(metas.length / ITEMS_PER_PAGE)),
+    [metas.length]
+  );
+
+  const firstItemIndex = metas.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const lastItemIndex = Math.min(currentPage * ITEMS_PER_PAGE, metas.length);
+
+  const paginatedMetas = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return metas.slice(start, start + ITEMS_PER_PAGE);
+  }, [metas, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const sectionedMetas = useMemo(() => {
+    return categorizeMetas(metas, todayInput);
+  }, [metas, todayInput]);
+
+  const paginatedSectionedMetas = useMemo(
+    () => categorizeMetas(paginatedMetas, todayInput),
+    [paginatedMetas, todayInput]
+  );
+
+  const isPastDate = (dateValue) => {
+    if (!dateValue) return false;
+    return dateValue < todayInput;
+  };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -136,6 +216,16 @@ function MetasPanel() {
       ? Math.max(Math.ceil(diffMs / 86400000), 0)
       : 0;
 
+    if (isPastDate(formData.fechaInicio) || isPastDate(formData.fechaFin)) {
+      setSubmitError("No puedes seleccionar fechas anteriores a la fecha actual.");
+      return;
+    }
+
+    if (formData.fechaFin < formData.fechaInicio) {
+      setSubmitError("La fecha limite no puede ser menor a la fecha de inicio.");
+      return;
+    }
+
     if (isEditMode) {
       const update = async () => {
         setIsSubmitting(true);
@@ -183,6 +273,7 @@ function MetasPanel() {
         });
 
         setMetas((prev) => [createdMeta, ...prev]);
+        setCurrentPage(1);
         setError(null);
         closeModal();
       } catch (err) {
@@ -194,6 +285,75 @@ function MetasPanel() {
     };
 
     create();
+  };
+
+  const renderMetaCard = (meta) => (
+    <article key={meta.id} className="meta-item">
+      <div className="meta-item-top">
+        <h3>{meta.nombreMeta}</h3>
+      </div>
+
+      <p className="meta-amount">{fmtCurrency(meta.monto)}</p>
+
+      <div className="meta-detail-grid">
+        <p>
+          <Target size={15} />
+          Plazo: <strong>{meta.plazoDias || "-"} dias</strong>
+        </p>
+        <p>
+          <CalendarDays size={15} />
+          Inicio: <strong>{fmtDate(meta.fechaInicio)}</strong>
+        </p>
+        <p>
+          <Flag size={15} />
+          Fin: <strong>{fmtDate(meta.fechaFin)}</strong>
+        </p>
+      </div>
+
+      <div className="meta-progress-track" aria-hidden="true">
+        <div
+          className="meta-progress-fill"
+          style={{ width: `${Math.round(meta.progreso * 100)}%` }}
+        ></div>
+      </div>
+
+      <div className="meta-item-actions">
+        <button
+          type="button"
+          className="meta-edit-btn"
+          onClick={() => openEditModal(meta)}
+          disabled={deletingId === meta.id}
+        >
+          Actualizar meta
+        </button>
+        <button
+          type="button"
+          className="meta-delete-btn"
+          onClick={() => handleDeleteMeta(meta.id)}
+          disabled={deletingId === meta.id}
+        >
+          {deletingId === meta.id ? "Eliminando..." : "Eliminar meta"}
+        </button>
+      </div>
+    </article>
+  );
+
+  const renderSection = (sectionKey, title) => {
+    const sectionItems = paginatedSectionedMetas[sectionKey];
+    if (sectionItems.length === 0) return null;
+    const totalInCategory = sectionedMetas[sectionKey].length;
+
+    return (
+      <section key={sectionKey} className="metas-section">
+        <div className="metas-section-header">
+          <h3>{title}</h3>
+          <span className="metas-section-tag">
+            {sectionItems.length} en esta pagina · {totalInCategory} total
+          </span>
+        </div>
+        {sectionItems.map((meta) => renderMetaCard(meta))}
+      </section>
+    );
   };
 
   return (
@@ -278,6 +438,7 @@ function MetasPanel() {
                     name="fechaInicio"
                     value={formData.fechaInicio}
                     onChange={handleInputChange}
+                    min={todayInput}
                     required
                   />
                 </label>
@@ -289,6 +450,7 @@ function MetasPanel() {
                     name="fechaFin"
                     value={formData.fechaFin}
                     onChange={handleInputChange}
+                    min={formData.fechaInicio || todayInput}
                     required
                   />
                 </label>
@@ -324,57 +486,36 @@ function MetasPanel() {
           {metas.length === 0 ? (
             <p className="metas-empty">Aun no tienes metas registradas.</p>
           ) : (
-            metas.map((meta) => (
-              <article key={meta.id} className="meta-item">
-                <div className="meta-item-top">
-                  <h3>{meta.nombreMeta}</h3>
-                  <span className="meta-id">Meta #{meta.id}</span>
-                </div>
+            <>
+              {SECTION_DEFINITIONS.map(({ key, title }) => renderSection(key, title))}
 
-                <p className="meta-amount">{fmtCurrency(meta.monto)}</p>
-
-                <div className="meta-detail-grid">
-                  <p>
-                    <Target size={15} />
-                    Plazo: <strong>{meta.plazoDias || "-"} dias</strong>
-                  </p>
-                  <p>
-                    <CalendarDays size={15} />
-                    Inicio: <strong>{fmtDate(meta.fechaInicio)}</strong>
-                  </p>
-                  <p>
-                    <Flag size={15} />
-                    Fin: <strong>{fmtDate(meta.fechaFin)}</strong>
-                  </p>
-                </div>
-
-                <div className="meta-progress-track" aria-hidden="true">
-                  <div
-                    className="meta-progress-fill"
-                    style={{ width: `${Math.round(meta.progreso * 100)}%` }}
-                  ></div>
-                </div>
-
-                <div className="meta-item-actions">
+              <div className="metas-pagination">
+                <p className="metas-pagination-summary">
+                  Mostrando {firstItemIndex}-{lastItemIndex} de {metas.length}
+                </p>
+                <div className="metas-pagination-controls">
                   <button
                     type="button"
-                    className="meta-edit-btn"
-                    onClick={() => openEditModal(meta)}
-                    disabled={deletingId === meta.id}
+                    className="metas-page-btn"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
                   >
-                    Actualizar meta
+                    Anterior
                   </button>
+                  <span className="metas-page-indicator">
+                    Pagina {currentPage} de {totalPages}
+                  </span>
                   <button
                     type="button"
-                    className="meta-delete-btn"
-                    onClick={() => handleDeleteMeta(meta.id)}
-                    disabled={deletingId === meta.id}
+                    className="metas-page-btn"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
                   >
-                    {deletingId === meta.id ? "Eliminando..." : "Eliminar meta"}
+                    Siguiente
                   </button>
                 </div>
-              </article>
-            ))
+              </div>
+            </>
           )}
         </div>
       )}
