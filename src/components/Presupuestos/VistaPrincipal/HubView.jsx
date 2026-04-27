@@ -1,102 +1,166 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Plus } from "lucide-react";
 
-import { isIncomeCategory, sumForCategory, getProgress, getBarClass } from "../utils/presupuestos.utils.js";
-import PeriodTabs      from "./PeriodTabs.jsx";
+import { normalizeText, sumForCategory, getProgress, getBarClass, fmt } from "../utils/presupuestos.utils.js";
 import SummaryCards    from "./SummaryCards.jsx";
 import BudgetDonutChart from "./BudgetDonutChart.jsx";
 import CategoryList    from "./CategoryList.jsx";
 
 
-export default function HubView({ categories, transactions, onCategoryClick, onManageClick }) {
-  const [period, setPeriod] = useState("current");
+export default function HubView({
+  presupuestos,
+  selectedPresId,
+  onPresupuestoChange,
+  onCreatePresupuesto,
+  creatingPresupuesto,
+  presupuesto,
+  categoriasConMonto,
+  transactions,
+  allCategorias,
+  onCategoryClick,
+  onManageClick,
+  onReload,
+}) {
 
-  //filtro
-  const filteredTxns = useMemo(() => transactions, [transactions, period]);
-
-  // totales 
-  const totalBudget = useMemo(
-    () => categories.reduce((a, c) => a + c.monto_limite, 0),
-    [categories]
-  );
+  // Total Budget = monto_limite del presupuesto activo
+  const totalBudget = presupuesto ? Number(presupuesto.monto_limite || 0) : 0;
 
   const totalExecuted = useMemo(
-    () => filteredTxns.filter((t) => t.type === "egreso").reduce((a, t) => a + t.amount, 0),
-    [filteredTxns]
+    () => transactions.filter((t) => t.type === "egreso").reduce((a, t) => a + t.amount, 0),
+    [transactions]
   );
 
   const totalIncome = useMemo(
-    () => filteredTxns.filter((t) => t.type === "ingreso").reduce((a, t) => a + t.amount, 0),
-    [filteredTxns]
+    () => transactions.filter((t) => t.type === "ingreso").reduce((a, t) => a + t.amount, 0),
+    [transactions]
   );
 
-  const balance   = totalIncome - totalExecuted;
+  const balance   = totalBudget - totalExecuted;
   const globalPct = totalBudget > 0
     ? Math.min(100, Math.round((totalExecuted / totalBudget) * 100))
     : 0;
 
-  // grafico
-  const chartData = useMemo(
-    () =>
-      categories
-        .map((cat) => {
-          const income   = isIncomeCategory(cat);
-          const executed = sumForCategory(filteredTxns, cat.id, income);
-          return { name: cat.nombre, value: executed, color: cat.color, catId: cat.id };
-        })
-        .filter((d) => d.value > 0),
-    [categories, filteredTxns]
-  );
-
-  //stats por categoria lista
+  // Estadísticas por categoría del presupuesto
   const catStats = useMemo(
     () =>
-      categories.map((cat) => {
-        const income   = isIncomeCategory(cat);
-        const executed = sumForCategory(filteredTxns, cat.id, income);
-        const progress = getProgress(executed, cat.monto_limite);
-        const barClass = getBarClass(progress, income);
-        return { ...cat, executed, progress, barClass, isIncome: income };
+      categoriasConMonto.map((cat) => {
+        const isIncome = normalizeText(cat.nombre_categ) === "ingresos";
+        const executed = sumForCategory(transactions, cat.nombre_categ, isIncome);
+        const progress = getProgress(executed, cat.monto_asignado);
+        const barClass = getBarClass(progress, isIncome);
+        return {
+          ...cat,
+          nombre: cat.nombre_categ,
+          executed,
+          progress,
+          barClass,
+          isIncome,
+          monto_limite: cat.monto_asignado,
+        };
       }),
-    [categories, filteredTxns]
+    [categoriasConMonto, transactions]
+  );
+
+  // Datos para el donut chart
+  const chartData = useMemo(
+    () =>
+      catStats
+        .map((cat) => ({
+          name: cat.nombre_categ,
+          value: cat.executed,
+          color: cat.color,
+          catName: cat.nombre_categ,
+        }))
+        .filter((d) => d.value > 0),
+    [catStats]
   );
 
   return (
     <>
-      <PeriodTabs period={period} onChange={setPeriod} />
+      {/* Selector de presupuesto */}
+      {presupuestos.length > 0 && (
+        <div className="pres-budget-selector">
+          <label htmlFor="pres-budget-select" className="pres-budget-selector__label">
+            Presupuesto:
+          </label>
+          <select
+            id="pres-budget-select"
+            className="pres-budget-selector__select"
+            value={selectedPresId || ""}
+            onChange={(e) => onPresupuestoChange(Number(e.target.value))}
+          >
+            {presupuestos.map((p) => (
+              <option key={p.id_presupuesto} value={p.id_presupuesto}>
+                {p.nombre}{" "}
+                ({new Date(p.inicio).toLocaleDateString("es-MX")}
+                {p.fin ? ` — ${new Date(p.fin).toLocaleDateString("es-MX")}` : " — sin fin"})
+              </option>
+            ))}
+          </select>
 
-      <SummaryCards
-        totalBudget={totalBudget}
-        totalExecuted={totalExecuted}
-        balance={balance}
-        globalPct={globalPct}
-      />
+          <button
+            type="button"
+            className="pres-budget-selector__create-btn"
+            onClick={onCreatePresupuesto}
+            disabled={creatingPresupuesto}
+          >
+            <Plus size={16} /> {creatingPresupuesto ? "Creando..." : "Nuevo presupuesto"}
+          </button>
+        </div>
+      )}
 
-      <div className="pres-hub-body">
-        <BudgetDonutChart
-          chartData={chartData}
-          globalPct={globalPct}
-          totalExecuted={totalExecuted}
-          categories={categories}
-          onSliceClick={onCategoryClick}
-        />
+      {presupuestos.length === 0 && (
+        <div className="pres-empty">
+          <p>No tienes presupuestos creados aún.</p>
+          <p style={{ fontSize: 12, color: "#a2a9ad" }}>
+            Crea tu primer presupuesto para comenzar a organizar tus gastos.
+          </p>
+          <button
+            type="button"
+            className="pres-empty__action-btn"
+            onClick={onCreatePresupuesto}
+            disabled={creatingPresupuesto}
+          >
+            <Plus size={16} /> {creatingPresupuesto ? "Creando..." : "Crear presupuesto"}
+          </button>
+        </div>
+      )}
 
-        <CategoryList
-          catStats={catStats}
-          onCategoryClick={onCategoryClick}
-          onManageClick={onManageClick}
-        />
-      </div>
+      {presupuesto && (
+        <>
+          <SummaryCards
+            totalBudget={totalBudget}
+            totalExecuted={totalExecuted}
+            balance={balance}
+            globalPct={globalPct}
+          />
 
-      {/* new transaction */}
-      <button
-        className="pres-fab"
-        id="pres-new-transaction-fab"
-        title="Nueva transacción"
-        onClick={() => alert("💡 Aquí iría el flujo de nueva transacción")}
-      >
-        <Plus size={24} />
-      </button>
+          <div className="pres-hub-body">
+            <BudgetDonutChart
+              chartData={chartData}
+              globalPct={globalPct}
+              totalExecuted={totalExecuted}
+              onSliceClick={(catName) => onCategoryClick(catName)}
+            />
+
+            <CategoryList
+              catStats={catStats}
+              onCategoryClick={(catName) => onCategoryClick(catName)}
+              onManageClick={onManageClick}
+            />
+          </div>
+
+          {/* new transaction */}
+          <button
+            className="pres-fab"
+            id="pres-new-transaction-fab"
+            title="Nueva transacción"
+            onClick={() => alert("💡 Aquí iría el flujo de nueva transacción")}
+          >
+            <Plus size={24} />
+          </button>
+        </>
+      )}
     </>
   );
 }

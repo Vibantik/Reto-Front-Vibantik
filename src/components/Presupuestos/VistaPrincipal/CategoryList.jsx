@@ -18,17 +18,23 @@ export default function CategoryList({ catStats, onCategoryClick, onManageClick 
         </button>
       </div>
 
+      {catStats.length === 0 && (
+        <div className="pres-empty" style={{ padding: "20px 0" }}>
+          <p>No hay categorías asignadas a este presupuesto.</p>
+        </div>
+      )}
+
       {catStats.map((cat) => {
         const Icon = ICON_MAP[cat.icon] || Settings;
         return (
           <div
-            key={cat.id}
-            id={`pres-cat-item-${cat.id}`}
+            key={cat.id_categ || cat.nombre_categ}
+            id={`pres-cat-item-${cat.id_categ}`}
             className="pres-cat-item"
             role="button"
             tabIndex={0}
-            onClick={() => onCategoryClick(cat.id)}
-            onKeyDown={(e) => e.key === "Enter" && onCategoryClick(cat.id)}
+            onClick={() => onCategoryClick(cat.nombre_categ)}
+            onKeyDown={(e) => e.key === "Enter" && onCategoryClick(cat.nombre_categ)}
           >
             {/* icono */}
             <div className="pres-cat-item__icon" style={{ background: cat.color }}>
@@ -37,7 +43,7 @@ export default function CategoryList({ catStats, onCategoryClick, onManageClick 
 
             {/* nombre y barra */}
             <div className="pres-cat-item__info">
-              <span className="pres-cat-item__name">{cat.nombre}</span>
+              <span className="pres-cat-item__name">{cat.nombre_categ || cat.nombre}</span>
               <div className="pres-cat-item__bar-row">
                 <div className="pres-cat-item__bar-track">
                   <div
@@ -48,7 +54,7 @@ export default function CategoryList({ catStats, onCategoryClick, onManageClick 
                 <span className="pres-cat-item__pct">{cat.progress}%</span>
               </div>
               <div style={{ fontSize: 10, color: "#a2a9ad", marginTop: 2 }}>
-                de {fmt(cat.monto_limite)}
+                de {fmt(cat.monto_limite || cat.monto_asignado || 0)}
               </div>
             </div>
 

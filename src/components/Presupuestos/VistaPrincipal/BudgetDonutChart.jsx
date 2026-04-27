@@ -20,12 +20,11 @@ export default function BudgetDonutChart({
   chartData,
   globalPct,
   totalExecuted,
-  categories,
   onSliceClick,
 }) {
   return (
     <div className="pres-chart-card">
-      <span className="pres-chart-card__title">Balance Global vs. Presupuesto</span>
+      <span className="pres-chart-card__title">Balance vs Presupuesto</span>
 
       <div className="pres-chart-wrapper">
         <ResponsiveContainer width="100%" height="100%">
@@ -39,8 +38,7 @@ export default function BudgetDonutChart({
               stroke="none"
               className="cursor-pointer"
               onClick={(data) => {
-                const cat = categories.find((c) => c.nombre === data.name);
-                if (cat) onSliceClick(cat.id);
+                if (data && data.name) onSliceClick(data.name);
               }}
             >
               {chartData.map((entry, i) => (
@@ -53,7 +51,7 @@ export default function BudgetDonutChart({
 
         {/* overlay doma */}
         <div className="pres-donut-center">
-          <span className="pres-donut-center__label">BALANCE GLOBAL VS. PRESUPUESTO</span>
+          <span className="pres-donut-center__label"> PRESUPUESTO</span>
           <span className="pres-donut-center__pct">{globalPct}%</span>
           <span className="pres-donut-center__amount">{fmt(totalExecuted)}</span>
         </div>
@@ -68,9 +66,9 @@ export default function BudgetDonutChart({
           justifyContent: "center",
         }}
       >
-        {chartData.map((d) => (
+        {chartData.map((d, i) => (
           <div
-            key={d.catId}
+            key={d.catName || i}
             style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#5B6670" }}
           >
             <span
