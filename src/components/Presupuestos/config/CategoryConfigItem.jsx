@@ -17,10 +17,11 @@ export default function CategoryConfigItem({
   onIconClick,
 }) {
   const Icon = ICON_MAP[cat.icon] || ICON_MAP["zap"];
+  const catKey = cat.id_categ ?? cat.uid;
 
   return (
     <div
-      id={`pres-config-item-${cat.id}`}
+      id={`pres-config-item-${catKey}`}
       className={`pres-config-item${isHighlighted ? " highlighted" : ""}`}
     >
       {/* ! TODO: Drag handle (rn solo visual ) */}
@@ -30,11 +31,11 @@ export default function CategoryConfigItem({
 
       {/* Icon picker trigger */}
       <button
-        id={`pres-icon-btn-${cat.id}`}
+        id={`pres-icon-btn-${catKey}`}
         className="pres-config-item__icon-btn"
         style={{ background: cat.color }}
         title="Cambiar icono"
-        onClick={() => onIconClick(cat.id)}
+        onClick={() => onIconClick(cat.uid)}
       >
         <Icon size={20} />
       </button>
@@ -42,24 +43,24 @@ export default function CategoryConfigItem({
       {/* Nombre y presupuesto */}
       <div className="pres-config-item__fields">
         <input
-          id={`pres-cat-name-${cat.id}`}
+          id={`pres-cat-name-${catKey}`}
           className="pres-config-item__name-input"
-          value={cat.nombre}
+          value={cat.nombre_categ}
           placeholder="Nombre de categoría"
-          onChange={(e) => onUpdate(cat.id, "nombre", e.target.value)}
+          onChange={(e) => onUpdate(cat.uid, "nombre_categ", e.target.value)}
         />
         <div className="pres-config-item__budget-row">
           <span>$</span>
           <input
-            id={`pres-cat-budget-${cat.id}`}
+            id={`pres-cat-budget-${catKey}`}
             className="pres-config-item__budget-input"
             type="number"
             min={0}
-            value={cat.monto_limite}
-            onChange={(e) => onUpdate(cat.id, "monto_limite", Number(e.target.value))}
+            value={cat.monto_asignado}
+            onChange={(e) => onUpdate(cat.uid, "monto_asignado", Number(e.target.value))}
           />
           <span style={{ marginLeft: "auto", color: "#a2a9ad" }}>
-            /{cat.monto_limite > 0 ? fmt(cat.monto_limite) : "sin límite"}
+            /{cat.monto_asignado > 0 ? fmt(cat.monto_asignado) : "sin límite"}
           </span>
         </div>
       </div>
@@ -98,10 +99,10 @@ export default function CategoryConfigItem({
 
       {/* Delete */}
       <button
-        id={`pres-cat-delete-${cat.id}`}
+        id={`pres-cat-delete-${catKey}`}
         className="pres-config-item__delete-btn"
         title="Eliminar categoría"
-        onClick={() => onDelete(cat.id)}
+        onClick={() => onDelete(cat.uid)}
       >
         <Trash2 size={18} />
       </button>
