@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Flag, Target } from "lucide-react";
-import { fetchMetas } from "../services/metasService";
+import { createMeta, fetchMetas } from "../services/metasService";
 import "./css/metas.css";
+
+const USER_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
 
 const fmtCurrency = (value) =>
   Number(value).toLocaleString("es-MX", {
@@ -25,9 +27,11 @@ function MetasPanel() {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [formData, setFormData] = useState({
-    titulo: "",
+    nombreMeta: "",
     monto: "",
     fechaInicio: "",
     fechaFin: "",
@@ -38,7 +42,7 @@ function MetasPanel() {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchMetas();
+        const data = await fetchMetas(USER_UUID);
         setMetas(data);
       } catch (err) {
         setError("No se pudieron cargar las metas.");
@@ -63,7 +67,7 @@ function MetasPanel() {
 
   const resetForm = () => {
     setFormData({
-      titulo: "",
+      nombreMeta: "",
       monto: "",
       fechaInicio: "",
       fechaFin: "",
@@ -71,31 +75,41 @@ function MetasPanel() {
   };
 
   const handleCreateMeta = (event) => {
-    event.preventDefault();
+    const create = async () => {
+      setIsSubmitting(true);
+      setSubmitError(null);
 
-    const inicio = new Date(formData.fechaInicio);
-    const fin = new Date(formData.fechaFin);
-    const diffMs = fin.getTime() - inicio.getTime();
-    const plazoDias = Number.isFinite(diffMs) ? Math.max(Math.ceil(diffMs / 86400000), 0) : 0;
+      const inicio = new Date(formData.fechaInicio);
+      const fin = new Date(formData.fechaFin);
+      const diffMs = fin.getTime() - inicio.getTime();
+      const plazoDias = Number.isFinite(diffMs)
+        ? Math.max(Math.ceil(diffMs / 86400000), 0)
+        : 0;
 
-    const nextId = metas.length
-      ? Math.max(...metas.map((meta) => Number(meta.id) || 0)) + 1
-      : 1;
+      try {
+        const createdMeta = await createMeta({
+          uuid: USER_UUID,
+          nombreMeta: formData.nombreMeta.trim(),
+          monto: Number(formData.monto),
+          fechaInicio: formData.fechaInicio,
+          fechaFin: formData.fechaFin,
+          plazoDias,
+        });
 
-    const newMeta = {
-      id: nextId,
-      titulo: formData.titulo.trim(),
-      monto: Number(formData.monto),
-      fechaInicio: formData.fechaInicio,
-      fechaFin: formData.fechaFin,
-      plazoDias,
-      progreso: 0,
+        setMetas((prev) => [createdMeta, ...prev]);
+        setError(null);
+        setFormOpen(false);
+        resetForm();
+      } catch (err) {
+        setSubmitError(err.message || "No se pudo crear la meta.");
+        console.error(err);
+      } finally {
+        setIsSubmitting(false);
+      }
     };
 
-    setMetas((prev) => [newMeta, ...prev]);
-    setError(null);
-    setFormOpen(false);
-    resetForm();
+    event.preventDefault();
+    create();
   };
 
   return (
@@ -157,8 +171,8 @@ function MetasPanel() {
                 Titulo de la meta
                 <input
                   type="text"
-                  name="titulo"
-                  value={formData.titulo}
+                  name="nombreMeta"
+                  value={formData.nombreMeta}
                   onChange={handleInputChange}
                   placeholder="Ej. Viaje familiar"
                   required
@@ -203,10 +217,17 @@ function MetasPanel() {
               </div>
 
               <div className="metas-form-actions">
-                <button type="submit" className="metas-submit-btn">
-                  Guardar meta
+                <button
+                  type="submit"
+                  className="metas-submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Guardando..." : "Guardar meta"}
                 </button>
               </div>
+              {submitError && (
+                <p className="metas-state metas-state-error">{submitError}</p>
+              )}
             </form>
           </div>
         </div>
@@ -223,7 +244,7 @@ function MetasPanel() {
             metas.map((meta) => (
               <article key={meta.id} className="meta-item">
                 <div className="meta-item-top">
-                  <h3>{meta.titulo}</h3>
+                  <h3>{meta.nombreMeta}</h3>
                   <span className="meta-id">Meta #{meta.id}</span>
                 </div>
 

@@ -266,6 +266,11 @@
   cursor: pointer;
 }
 
+.metas-submit-btn:disabled {
+  background: #c1c7ce;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .metas-screen {
     padding: 22px;

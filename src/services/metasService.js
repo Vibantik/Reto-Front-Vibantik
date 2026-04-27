@@ -7,11 +7,11 @@ const normalizeMeta = (meta, index) => {
   const fechaFin = meta.fecha_fin ?? meta.end_date ?? null;
   const plazoDias = Number(meta.plazo_dias ?? meta.plazo ?? 0);
   const progreso = Number(meta.progreso ?? 0);
-  const titulo = meta.titulo ?? meta.nombre ?? `Meta ${id}`;
+  const nombreMeta = meta.nombreMeta ?? "";
 
   return {
     id,
-    titulo,
+    nombreMeta,
     monto,
     fechaInicio,
     fechaFin,
@@ -32,4 +32,44 @@ export const fetchMetas = async (uuid = "dbf9f839-b57e-415f-8b5b-9213524ed827") 
   if (!Array.isArray(rawList)) throw new Error("Formato de metas invalido");
 
   return rawList.map(normalizeMeta);
+};
+
+export const createMeta = async ({
+  uuid,
+  nombreMeta,
+  monto,
+  fechaInicio,
+  fechaFin,
+  plazoDias,
+}) => {
+  const response = await fetch(`${API_URL}/api/metas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      uuid_de_usuario: uuid,
+      nombreMeta,
+      monto_meta: monto,
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      plazo_dias: plazoDias,
+    }),
+  });
+
+  if (!response.ok) {
+    let backendMessage = "";
+    try {
+      const errorPayload = await response.json();
+      backendMessage = errorPayload?.message || errorPayload?.error || "";
+    } catch {
+      backendMessage = "";
+    }
+
+    const details = backendMessage ? ` (${backendMessage})` : "";
+    throw new Error(`Error al crear meta: ${response.status}${details}`);
+  }
+
+  const payload = await response.json();
+  return normalizeMeta(payload);
 };
