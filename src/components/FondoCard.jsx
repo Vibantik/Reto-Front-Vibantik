@@ -251,12 +251,6 @@ export default function FondoCard({ fondo, isExpandable = false }) {
                   onClick={onChartClick}
                   style={{ cursor: "crosshair" }}
                 >
-                  <defs>
-                    <linearGradient id="fondoLineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#ec0029" />
-                      <stop offset="100%" stopColor="#FCC419" />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis
                     dataKey="fecha"
@@ -281,7 +275,7 @@ export default function FondoCard({ fondo, isExpandable = false }) {
                   <Line
                     type="monotone"
                     dataKey="tasa"
-                    stroke="url(#fondoLineGrad)"
+                    stroke="#ec0029"
                     strokeWidth={2.5}
                     dot={false}
                     activeDot={{
