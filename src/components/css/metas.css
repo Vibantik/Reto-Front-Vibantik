@@ -160,6 +160,46 @@
   background: linear-gradient(90deg, #eb0029 0%, #f15f79 100%);
 }
 
+.meta-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.meta-edit-btn,
+.meta-delete-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.meta-edit-btn {
+  background: #ebf0f2;
+  color: #323e48;
+}
+
+.meta-delete-btn {
+  background: #fde8eb;
+  color: #b10020;
+}
+
+.meta-edit-btn:hover,
+.meta-delete-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.meta-edit-btn:disabled,
+.meta-delete-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .metas-empty,
 .metas-state {
   color: #5b6670;

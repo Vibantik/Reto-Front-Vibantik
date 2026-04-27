@@ -20,6 +20,15 @@ const normalizeMeta = (meta, index) => {
   };
 };
 
+const getBackendErrorMessage = async (response) => {
+  try {
+    const errorPayload = await response.json();
+    return errorPayload?.message || errorPayload?.error || "";
+  } catch {
+    return "";
+  }
+};
+
 export const fetchMetas = async (uuid = "dbf9f839-b57e-415f-8b5b-9213524ed827") => {
   const query = new URLSearchParams();
   if (uuid) query.set("uuid_de_usuario", uuid);
@@ -58,18 +67,78 @@ export const createMeta = async ({
   });
 
   if (!response.ok) {
-    let backendMessage = "";
-    try {
-      const errorPayload = await response.json();
-      backendMessage = errorPayload?.message || errorPayload?.error || "";
-    } catch {
-      backendMessage = "";
-    }
-
+    const backendMessage = await getBackendErrorMessage(response);
     const details = backendMessage ? ` (${backendMessage})` : "";
     throw new Error(`Error al crear meta: ${response.status}${details}`);
   }
 
   const payload = await response.json();
   return normalizeMeta(payload);
+};
+
+export const updateMeta = async ({
+  idMeta,
+  uuid,
+  nombreMeta,
+  monto,
+  fechaInicio,
+  fechaFin,
+  plazoDias,
+}) => {
+  const query = new URLSearchParams({
+    uuid_de_usuario: String(uuid ?? ""),
+    nombreMeta: String(nombreMeta ?? ""),
+    monto_meta: String(monto ?? ""),
+    fecha_inicio: String(fechaInicio ?? ""),
+    fecha_fin: String(fechaFin ?? ""),
+    plazo_dias: String(plazoDias ?? ""),
+  });
+
+  const response = await fetch(`${API_URL}/api/metas/${idMeta}?${query}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      uuid_de_usuario: uuid,
+      nombreMeta,
+      monto_meta: monto,
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      plazo_dias: plazoDias,
+    }),
+  });
+
+  if (!response.ok) {
+    const backendMessage = await getBackendErrorMessage(response);
+    const details = backendMessage ? ` (${backendMessage})` : "";
+    throw new Error(`Error al actualizar meta: ${response.status}${details}`);
+  }
+
+  const payload = await response.json();
+  return normalizeMeta(payload);
+};
+
+export const deleteMeta = async ({ idMeta, uuid }) => {
+  const query = new URLSearchParams({
+    uuid_de_usuario: String(uuid ?? ""),
+  });
+
+  const response = await fetch(`${API_URL}/api/metas/${idMeta}?${query}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      uuid_de_usuario: uuid,
+    }),
+  });
+
+  if (!response.ok) {
+    const backendMessage = await getBackendErrorMessage(response);
+    const details = backendMessage ? ` (${backendMessage})` : "";
+    throw new Error(`Error al eliminar meta: ${response.status}${details}`);
+  }
+
+  return true;
 };

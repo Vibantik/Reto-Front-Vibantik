@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Flag, Target } from "lucide-react";
-import { createMeta, fetchMetas } from "../services/metasService";
+import { createMeta, deleteMeta, fetchMetas, updateMeta } from "../services/metasService";
 import "./css/metas.css";
 
 const USER_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
@@ -27,9 +27,12 @@ function MetasPanel() {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editingMetaId, setEditingMetaId] = useState(null);
   const [formData, setFormData] = useState({
     nombreMeta: "",
     monto: "",
@@ -41,6 +44,7 @@ function MetasPanel() {
     const load = async () => {
       setLoading(true);
       setError(null);
+      setActionError(null);
       try {
         const data = await fetchMetas(USER_UUID);
         setMetas(data);
@@ -74,17 +78,99 @@ function MetasPanel() {
     });
   };
 
+  const closeModal = () => {
+    setFormOpen(false);
+    setEditingMetaId(null);
+    setSubmitError(null);
+    resetForm();
+  };
+
+  const openCreateModal = () => {
+    setEditingMetaId(null);
+    setSubmitError(null);
+    setActionError(null);
+    resetForm();
+    setFormOpen(true);
+  };
+
+  const openEditModal = (meta) => {
+    setEditingMetaId(meta.id);
+    setSubmitError(null);
+    setFormData({
+      nombreMeta: meta.nombreMeta ?? "",
+      monto: String(meta.monto ?? ""),
+      fechaInicio: (meta.fechaInicio ?? "").slice(0, 10),
+      fechaFin: (meta.fechaFin ?? "").slice(0, 10),
+    });
+    setActionError(null);
+    setFormOpen(true);
+  };
+
+  const handleDeleteMeta = async (metaId) => {
+    const shouldDelete = window.confirm("Quieres eliminar esta meta?");
+    if (!shouldDelete) return;
+
+    setDeletingId(metaId);
+    setActionError(null);
+    try {
+      await deleteMeta({ idMeta: metaId, uuid: USER_UUID });
+      setMetas((prev) => prev.filter((meta) => meta.id !== metaId));
+      if (editingMetaId === metaId) closeModal();
+    } catch (err) {
+      setActionError(err.message || "No se pudo eliminar la meta.");
+      console.error(err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const isEditMode = editingMetaId !== null;
+
   const handleCreateMeta = (event) => {
+    event.preventDefault();
+
+    const inicio = new Date(formData.fechaInicio);
+    const fin = new Date(formData.fechaFin);
+    const diffMs = fin.getTime() - inicio.getTime();
+    const plazoDias = Number.isFinite(diffMs)
+      ? Math.max(Math.ceil(diffMs / 86400000), 0)
+      : 0;
+
+    if (isEditMode) {
+      const update = async () => {
+        setIsSubmitting(true);
+        setSubmitError(null);
+        setActionError(null);
+        try {
+          const updatedMeta = await updateMeta({
+            idMeta: editingMetaId,
+            uuid: USER_UUID,
+            nombreMeta: formData.nombreMeta.trim(),
+            monto: Number(formData.monto),
+            fechaInicio: formData.fechaInicio,
+            fechaFin: formData.fechaFin,
+            plazoDias,
+          });
+
+          setMetas((prev) =>
+            prev.map((meta) => (meta.id === editingMetaId ? updatedMeta : meta))
+          );
+          closeModal();
+        } catch (err) {
+          setSubmitError(err.message || "No se pudo actualizar la meta.");
+          console.error(err);
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+
+      update();
+      return;
+    }
+
     const create = async () => {
       setIsSubmitting(true);
       setSubmitError(null);
-
-      const inicio = new Date(formData.fechaInicio);
-      const fin = new Date(formData.fechaFin);
-      const diffMs = fin.getTime() - inicio.getTime();
-      const plazoDias = Number.isFinite(diffMs)
-        ? Math.max(Math.ceil(diffMs / 86400000), 0)
-        : 0;
 
       try {
         const createdMeta = await createMeta({
@@ -98,8 +184,7 @@ function MetasPanel() {
 
         setMetas((prev) => [createdMeta, ...prev]);
         setError(null);
-        setFormOpen(false);
-        resetForm();
+        closeModal();
       } catch (err) {
         setSubmitError(err.message || "No se pudo crear la meta.");
         console.error(err);
@@ -108,7 +193,6 @@ function MetasPanel() {
       }
     };
 
-    event.preventDefault();
     create();
   };
 
@@ -130,7 +214,7 @@ function MetasPanel() {
           <button
             type="button"
             className="metas-create-btn"
-            onClick={() => setFormOpen(true)}
+            onClick={openCreateModal}
           >
             Anadir meta
           </button>
@@ -140,10 +224,7 @@ function MetasPanel() {
       {formOpen && (
         <div
           className="metas-modal-overlay"
-          onClick={() => {
-            setFormOpen(false);
-            resetForm();
-          }}
+          onClick={closeModal}
         >
           <div
             className="metas-modal"
@@ -153,14 +234,11 @@ function MetasPanel() {
             aria-label="Formulario para crear meta"
           >
             <div className="metas-modal-head">
-              <h3>Crear meta</h3>
+              <h3>{isEditMode ? "Actualizar meta" : "Crear meta"}</h3>
               <button
                 type="button"
                 className="metas-close-btn"
-                onClick={() => {
-                  setFormOpen(false);
-                  resetForm();
-                }}
+                onClick={closeModal}
               >
                 Cerrar
               </button>
@@ -222,7 +300,11 @@ function MetasPanel() {
                   className="metas-submit-btn"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Guardando..." : "Guardar meta"}
+                  {isSubmitting
+                    ? "Guardando..."
+                    : isEditMode
+                      ? "Actualizar meta"
+                      : "Guardar meta"}
                 </button>
               </div>
               {submitError && (
@@ -235,6 +317,7 @@ function MetasPanel() {
 
       {loading && <p className="metas-state">Cargando metas...</p>}
       {error && <p className="metas-state metas-state-error">{error}</p>}
+      {!error && actionError && <p className="metas-state metas-state-error">{actionError}</p>}
 
       {!loading && !error && (
         <div className="metas-list">
@@ -270,6 +353,25 @@ function MetasPanel() {
                     className="meta-progress-fill"
                     style={{ width: `${Math.round(meta.progreso * 100)}%` }}
                   ></div>
+                </div>
+
+                <div className="meta-item-actions">
+                  <button
+                    type="button"
+                    className="meta-edit-btn"
+                    onClick={() => openEditModal(meta)}
+                    disabled={deletingId === meta.id}
+                  >
+                    Actualizar meta
+                  </button>
+                  <button
+                    type="button"
+                    className="meta-delete-btn"
+                    onClick={() => handleDeleteMeta(meta.id)}
+                    disabled={deletingId === meta.id}
+                  >
+                    {deletingId === meta.id ? "Eliminando..." : "Eliminar meta"}
+                  </button>
                 </div>
               </article>
             ))
