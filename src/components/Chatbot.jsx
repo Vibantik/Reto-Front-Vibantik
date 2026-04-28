@@ -1,5 +1,6 @@
 import { useChatbot } from "./chatbotElements/useChatbot";
 import { X, Send } from "lucide-react";
+import PromptContainer from "./chatbotElements/PromptContainer";
 
 export default function Chatbot({ open, onClose }) {
   const { messages,
@@ -10,7 +11,7 @@ export default function Chatbot({ open, onClose }) {
     messagesEndRef,
     sendMessage,
     handleKeyDown,
-    } = useChatbot();
+  } = useChatbot();
 
   if (!open) return null;
 
@@ -54,6 +55,8 @@ export default function Chatbot({ open, onClose }) {
           )}
 
           <div ref={messagesEndRef} />
+
+          {messages.length === 1 && <PromptContainer setInput={setInput} />}
         </div>
 
         <div className="chatbot-input-area">

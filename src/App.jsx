@@ -7,6 +7,7 @@ import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import InversionesPanel from "./components/InversionesPanel";
 import PresupuestosPanel from "./components/Presupuestos/PresupuestosPanel";
+import MetasPanel from "./components/MetasPanel";
 import Sidebar from "./components/Sidebar";
 import "./App.css";
 
@@ -61,7 +62,17 @@ export default function App() {
       case "Presupuestos":
         return (
           <main className="dashboard">
-            <PresupuestosPanel />
+            <div className="dashboard-row transactions-row">
+              <PresupuestosPanel />
+            </div>
+          </main>
+        );
+      case "Metas":
+        return (
+          <main className="dashboard">
+            <div className="dashboard-row transactions-row">
+              <MetasPanel />
+            </div>
           </main>
         );
       default:

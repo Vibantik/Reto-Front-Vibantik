@@ -8,6 +8,8 @@ import Pagination from "./Pagination";
 import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
+const SSE_URL = "http://localhost:3000/api/transactions/stream";
+
 function TransactionsPanel({ showChart = true }) {
   const [searchTerm, setSearchTerm]           = useState("");
   const [selectedType, setSelectedType]       = useState("all");
@@ -54,6 +56,34 @@ function TransactionsPanel({ showChart = true }) {
       }
     };
     load();
+  }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
+
+  useEffect(() => {
+    const eventSource = new EventSource(SSE_URL);
+
+    eventSource.addEventListener("new-transaction", (event) => {
+      try {
+        const newTransaction = JSON.parse(event.data);
+
+        
+        setTransactions((prev) => [newTransaction, ...prev]);
+
+        setPagination((prev) => ({
+          ...prev,
+          totalItems: prev.totalItems + 1,
+        }));
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    eventSource.onerror = (err) => {
+      console.error(err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
   }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
   // Para el chart sólo usamos las transacciones del mes ya cargadas  
