@@ -4,15 +4,16 @@ import { useState, useMemo } from "react";
 import { ChevronLeft, Edit2, Search, Settings } from "lucide-react";
 
 import { ICON_MAP } from "../presupuestos.data.js";
-import { isIncomeCategory, sumForCategory, getProgress } from "../utils/presupuestos.utils.js";
+import { normalizeText, sumForCategory, getProgress, dateKey } from "../utils/presupuestos.utils.js";
 
 import CategoryStatusCard from "./CategoryStatusCard.jsx";
 import TransactionSearch  from "./TransactionSearch.jsx";
 import TransactionGroup   from "./TransactionGroup.jsx";
 
 export default function CategoryDetailView({
-  categoryId,
-  categories,
+  categoryName,
+  categoriasConMonto,
+  allCategorias,
   transactions,
   onBack,
   onEdit,
@@ -20,39 +21,51 @@ export default function CategoryDetailView({
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState(null);
 
-  const cat = categories.find((c) => c.id === categoryId);
-  if (!cat) return null;
+  // Encontrar la categoría por nombre normalizado
+  const normName = normalizeText(categoryName);
+  const catMonto = categoriasConMonto.find(
+    (c) => normalizeText(c.nombre_categ) === normName
+  );
+  const catInfo = allCategorias.find(
+    (c) => normalizeText(c.nombre_categ) === normName
+  );
 
-  const isIncome = isIncomeCategory(cat);
-  const Icon     = ICON_MAP[cat.icon] || Settings;
+  const displayName = catMonto?.nombre_categ || catInfo?.nombre_categ || categoryName;
+  const icon = catMonto?.icon || catInfo?.icon || "zap";
+  const color = catMonto?.color || catInfo?.color || "#7B868C";
+  const montoLimite = catMonto?.monto_asignado || 0;
+  const Icon = ICON_MAP[icon] || Settings;
 
-  /* filtrar y orden transacciones de esta categoria */
+  const isIncome = normName === "ingresos";
+
+  // filtrar transacciones de categoria escogida
   const catTxns = useMemo(
     () =>
       transactions
         .filter(
           (t) =>
-            t.categoryId === categoryId &&
+            normalizeText(t.category) === normName &&
             t.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
         .sort((a, b) => new Date(b.date) - new Date(a.date)),
-    [transactions, categoryId, searchTerm]
+    [transactions, normName, searchTerm]
   );
 
-  /* totales */
+  // totales
   const executed = useMemo(
-    () => sumForCategory(transactions, categoryId, isIncome),
-    [transactions, categoryId, isIncome]
+    () => sumForCategory(transactions, categoryName, isIncome),
+    [transactions, categoryName, isIncome]
   );
-  const balance  = cat.monto_limite - executed;
-  const progress = getProgress(executed, cat.monto_limite);
+  const balance  = montoLimite - executed;
+  const progress = getProgress(executed, montoLimite);
 
-  /* agrupar por fecha */
+  // agrupar por fecha (YYYY-MM-DD) 
   const grouped = useMemo(
     () =>
       catTxns.reduce((acc, t) => {
-        if (!acc[t.date]) acc[t.date] = [];
-        acc[t.date].push(t);
+        const key = dateKey(t.date);
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(t);
         return acc;
       }, {}),
     [catTxns]
@@ -76,16 +89,16 @@ export default function CategoryDetailView({
           <ChevronLeft size={20} />
         </button>
 
-        <div className="pres-detail-header__icon" style={{ background: cat.color }}>
+        <div className="pres-detail-header__icon" style={{ background: color }}>
           <Icon size={18} />
         </div>
 
-        <h2 className="pres-detail-header__title">{cat.nombre}</h2>
+        <h2 className="pres-detail-header__title">{displayName}</h2>
 
         <button
           className="pres-detail-header__edit-btn"
           id="pres-detail-edit-cat-btn"
-          onClick={() => onEdit(categoryId)}
+          onClick={() => onEdit(categoryName)}
         >
           <Edit2 size={14} /> Editar
         </button>
@@ -93,7 +106,7 @@ export default function CategoryDetailView({
 
       {/* Tarjeta de status */}
       <CategoryStatusCard
-        budget={cat.monto_limite}
+        budget={montoLimite}
         executed={executed}
         balance={balance}
         progress={progress}
@@ -115,7 +128,7 @@ export default function CategoryDetailView({
             key={date}
             date={date}
             transactions={grouped[date]}
-            categoryIcon={cat.icon}
+            categoryIcon={icon}
             expandedId={expandedId}
             onToggle={toggleExpanded}
           />

@@ -1,6 +1,6 @@
 // Fila de transacción expandible dentro de un grupo de transacciones.
 
-import { ChevronDown, Edit2, Landmark, CreditCard, FileText } from "lucide-react";
+import { ChevronDown, Edit2, Landmark, FileText } from "lucide-react";
 import { fmt } from "../utils/presupuestos.utils.js";
 import { ICON_MAP } from "../presupuestos.data.js";
 
@@ -26,7 +26,7 @@ export default function TransactionRow({ transaction: t, categoryIcon, isExpande
         <div className="pres-txn-row__info">
           <p className="pres-txn-row__name">{t.description}</p>
           <p className="pres-txn-row__sub">
-            {isIncomeT ? "Ingreso" : "Gasto"} · {t.method}
+            {isIncomeT ? "Ingreso" : "Gasto"}{t.category ? ` · ${t.category}` : ""}
           </p>
         </div>
 
@@ -47,18 +47,12 @@ export default function TransactionRow({ transaction: t, categoryIcon, isExpande
           <div className="pres-txn-expand__grid">
             <div className="pres-txn-expand__field">
               <Landmark size={14} />
-              <span>{t.account}</span>
+              <span>Categoría: {t.category || "Sin categoría"}</span>
             </div>
             <div className="pres-txn-expand__field">
-              <CreditCard size={14} />
-              <span>{t.method}</span>
+              <FileText size={14} />
+              <span>Tipo: {t.type}</span>
             </div>
-            {t.notes && (
-              <div className="pres-txn-expand__field" style={{ gridColumn: "1 / -1" }}>
-                <FileText size={14} />
-                <span style={{ fontStyle: "italic", fontSize: 12 }}>{t.notes}</span>
-              </div>
-            )}
           </div>
 
           <button

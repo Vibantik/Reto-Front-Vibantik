@@ -22,25 +22,46 @@ export function getBarClass(progress, isIncome) {
   return "ok";
 }
 
-//Formato fecha (YYYY-MM-DD) 
+//Formato (YYYY-MM-DD)
 export function formatDate(dateStr) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("es-MX", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 }
 
-//tratar categoria con base a nombre
-export function isIncomeCategory(cat) {
-  return cat.nombre === "ingreso";
+//normalizar texto de bd
+export function normalizeText(str) {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")  // quitar acentos
+    .trim();
 }
 
-//Sumar transacciones para una categoria en una dirección (egreso | ingreso).
-export function sumForCategory(transactions, categoryId, income) {
+// agrupar transacciones por fecha
+export function dateKey(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toISOString().slice(0, 10);
+}
+
+//tratar categoria con base a tipo de transacción
+export function isIncomeCategory(cat) {
+  return normalizeText(cat.nombre_categ || cat.nombre) === "ingresos";
+}
+
+//Sumar transacciones para una categoría usando match de texto normalizado.
+export function sumForCategory(transactions, categoryName, income) {
   const type = income ? "ingreso" : "egreso";
+  const normCat = normalizeText(categoryName);
   return transactions
-    .filter((t) => t.categoryId === categoryId && t.type === type)
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((t) => normalizeText(t.category) === normCat && t.type === type)
+    .reduce((acc, t) => acc + Number(t.amount || 0), 0);
 }
