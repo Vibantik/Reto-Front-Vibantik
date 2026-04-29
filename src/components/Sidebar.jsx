@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import { fetchUserSettings, saveUserSettings } from '../services/configService';
+import { getUserUuid } from '../utils/userUuid';
 import './css/Sidebar.css';
 import '../App.css';
 
@@ -17,6 +18,8 @@ const MOCK_CONFIG_DATA = [
 const settingsData = MOCK_CONFIG_DATA;
 
 export default function Sidebar({ isOpen }) {
+    const userUuid = getUserUuid();
+
     const [toggles, setToggles] = useState(() => {
         const initialState = {};
         settingsData.forEach((item) => {
@@ -27,7 +30,7 @@ export default function Sidebar({ isOpen }) {
 
     useEffect(() => {
         const loadSettings = async () => {
-            const settingsFromServer = await fetchUserSettings('dbf9f839-b57e-415f-8b5b-9213524ed827');
+            const settingsFromServer = await fetchUserSettings(userUuid);
 
             if (settingsFromServer) {
                 setToggles(settingsFromServer);
@@ -35,14 +38,14 @@ export default function Sidebar({ isOpen }) {
         };
 
         loadSettings();
-    }, []);
+    }, [userUuid]);
 
     const handleToggle = (key) => {
         setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
     };
 
     const handleSave = async () => {
-        const success = await saveUserSettings('dbf9f839-b57e-415f-8b5b-9213524ed827', toggles);
+        const success = await saveUserSettings(userUuid, toggles);
 
         if (!success) {
             alert('Hubo un error al guardar.');
