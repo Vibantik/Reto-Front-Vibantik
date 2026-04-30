@@ -9,26 +9,58 @@ import {
 } from "recharts";
 import { AlertTriangle } from "lucide-react";
 import { fetchTransactions } from "../services/transactionsService";
- 
-const CATEGORY_COLORS = {
-  Comida:          "#3B5BDB",
-  Transporte:      "#845EF7",
-  Entretenimiento: "#EC0029",
-  Servicios:       "#FCC419",
-  Salud:           "#20C997",
-  Compras:         "#FF922B",
-  Ingreso:         "#16a34a",
-  Otros:           "#9ca3af",
+import {
+  fetchCategorias,
+  fetchPresupuestos,
+  fetchPresupuesto,
+} from "../services/presupuestosService";
+import { getUserUuid } from "../utils/userUuid";
+
+const DEFAULT_COLOR = "#9ca3af";
+
+const normalizeKey = (value) => String(value || "").trim().toLowerCase();
+// TODO : revisar que si este correcto cuando hay multiples presupuestos activos
+const pickActivePresupuesto = (presupuestos = []) => {
+  if (!Array.isArray(presupuestos) || presupuestos.length === 0) return null;
+  const now = new Date();
+  const activos = presupuestos.filter((p) => {
+    const ini = new Date(p.inicio);
+    const fin = p.fin ? new Date(p.fin) : null;
+    return ini <= now && (!fin || fin >= now);
+  });
+  const source = activos.length > 0 ? activos : presupuestos;
+  return [...source].sort((a, b) => new Date(b.inicio) - new Date(a.inicio))[0];
 };
- 
-// Presupuestos de referencia por categoría (MXN/mes)
-const PRESUPUESTOS = {
-  Comida:          3000,
-  Transporte:      1500,
-  Entretenimiento: 1000,
-  Servicios:       1200,
-  Salud:           800,
-  Compras:         2000,
+
+const buildCategoryMeta = (categorias = [], presupuestoCats = []) => {
+  const metaByKey = new Map();
+
+  (categorias || []).forEach((c) => {
+    const key = normalizeKey(c?.nombre_categ);
+    if (!key) return;
+    metaByKey.set(key, {
+      name: c.nombre_categ || "",
+      color: c.color || DEFAULT_COLOR,
+      presupuesto: 0,
+    });
+  });
+
+  (presupuestoCats || []).forEach((c) => {
+    const key = normalizeKey(c?.nombre_categ);
+    if (!key) return;
+    const prev = metaByKey.get(key) || {
+      name: c.nombre_categ || "",
+      color: DEFAULT_COLOR,
+      presupuesto: 0,
+    };
+    metaByKey.set(key, {
+      name: prev.name || c.nombre_categ || "",
+      color: c.color || prev.color || DEFAULT_COLOR,
+      presupuesto: Number(c.monto_asignado || 0),
+    });
+  });
+
+  return metaByKey;
 };
  
 function ActiveShape(props) {
@@ -60,6 +92,7 @@ export default function ExpensesChart() {
   const [totalEgresos, setTotalEgresos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alertas, setAlertas] = useState([]);
+  const uuid = getUserUuid();
  
   useEffect(() => {
     const load = async () => {
@@ -70,52 +103,84 @@ export default function ExpensesChart() {
         const ultimoDia = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0);
         const ultimoDiaStr = `${ultimoDia.getFullYear()}-${String(ultimoDia.getMonth() + 1).padStart(2, "0")}-${String(ultimoDia.getDate()).padStart(2, "0")}`;
  
-        const result = await fetchTransactions({
-          page: 1, limit: 200,
-          type: "egreso",
-          startDate: primerDia,
-          endDate: ultimoDiaStr,
-        });
- 
+        const [result, categorias, presList] = await Promise.all([
+          fetchTransactions({
+            page: 1,
+            limit: 200,
+            type: "egreso",
+            startDate: primerDia,
+            endDate: ultimoDiaStr,
+          }),
+          fetchCategorias().catch(() => []),
+          fetchPresupuestos(uuid).catch(() => []),
+        ]);
+
+        let presupuestoDetalle = null;
+        const activo = pickActivePresupuesto(presList);
+        if (activo?.id_presupuesto != null) {
+          try {
+            presupuestoDetalle = await fetchPresupuesto(activo.id_presupuesto);
+          } catch (err) {
+            console.error("Error cargando presupuesto activo:", err);
+          }
+        }
+
+        const metaByKey = buildCategoryMeta(
+          categorias,
+          presupuestoDetalle?.categorias || []
+        );
+
         const transactions = result.data ?? [];
- 
-        // Agrupa por categoría
-        const porCategoria = {};
+        const porCategoria = new Map();
         transactions.forEach((t) => {
-          const cat = t.category || "Otros";
-          porCategoria[cat] = (porCategoria[cat] || 0) + parseFloat(t.amount || 0);
+          const raw = t.category || "Otros";
+          const key = normalizeKey(raw) || "otros";
+          const meta = metaByKey.get(key);
+          const displayName = meta?.name || raw || "Otros";
+          const prev = porCategoria.get(key);
+          const nextValue = (prev?.value || 0) + parseFloat(t.amount || 0);
+          porCategoria.set(key, { name: displayName, value: nextValue });
         });
- 
-        const total = Object.values(porCategoria).reduce((s, v) => s + v, 0);
+
+        const total = Array.from(porCategoria.values()).reduce(
+          (s, v) => s + v.value,
+          0
+        );
         setTotalEgresos(total);
- 
-        const chartData = Object.entries(porCategoria)
-          .sort((a, b) => b[1] - a[1])
-          .map(([name, value]) => ({
-            name,
-            value,
-            pct: total > 0 ? `${Math.round((value / total) * 100)}%` : "0%",
-            color: CATEGORY_COLORS[name] ?? "#9ca3af",
+
+        const chartData = Array.from(porCategoria.entries())
+          .sort((a, b) => b[1].value - a[1].value)
+          .map(([key, entry]) => ({
+            name: entry.name,
+            value: entry.value,
+            pct: total > 0 ? `${Math.round((entry.value / total) * 100)}%` : "0%",
+            color: metaByKey.get(key)?.color ?? DEFAULT_COLOR,
           }));
- 
+
         setData(chartData);
- 
-        // Detecta categorías sobre presupuesto (>80%)
-        const sobrePres = Object.entries(PRESUPUESTOS)
-          .filter(([cat, pres]) => porCategoria[cat] && (porCategoria[cat] / pres) > 0.8)
-          .map(([cat]) => cat);
+
+        // * Detecta categorias sobre presupuesto (>80%)
+        const sobrePres = [];
+        for (const [key, meta] of metaByKey.entries()) {
+          const presupuesto = Number(meta.presupuesto || 0);
+          if (!presupuesto) continue;
+          const gasto = porCategoria.get(key)?.value || 0;
+          if (gasto / presupuesto > 0.8) {
+            sobrePres.push(meta.name || key);
+          }
+        }
         setAlertas(sobrePres);
  
       } catch (err) {
         console.error("Error cargando gastos:", err);
-        // Fallback: datos vacíos, no rompe la UI
+        // para no romper UI
         setData([]);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [uuid]);
  
   const onEnter = useCallback((_, index) => setActiveIndex(index), []);
   const onLeave = useCallback(() => setActiveIndex(-1), []);
