@@ -8,33 +8,39 @@ export default function CategoryStatusCard({ budget, executed, balance, progress
 
   return (
     <div className="pres-detail-status">
-      <div className="pres-detail-status__row">
-        <div className="pres-detail-status__item">
-          <span className="pres-detail-status__label">Presupuesto</span>
-          <span className="pres-detail-status__amount">{fmt(budget)}</span>
-        </div>
-        <div className="pres-detail-status__item">
-          <span className="pres-detail-status__label">Ejecutado</span>
-          <span className="pres-detail-status__amount">{fmt(executed)}</span>
-        </div>
-        <div className="pres-detail-status__item">
-          <span className="pres-detail-status__label">Restante</span>
-          <span className={`pres-detail-status__amount ${balance >= 0 ? "success" : "danger"}`}>
-            {fmt(balance)}
+      <div className="pres-detail-status__row" style={isIncome ? { gridTemplateColumns: "1fr" } : {}}>
+        {!isIncome && (
+          <>
+            <div className="pres-detail-status__item">
+              <span className="pres-detail-status__label">Presupuesto</span>
+              <span className="pres-detail-status__amount">{fmt(budget)}</span>
+            </div>
+            <div className="pres-detail-status__item">
+              <span className="pres-detail-status__label">Ejecutado</span>
+              <span className="pres-detail-status__amount">{fmt(executed)}</span>
+            </div>
+          </>
+        )}
+        <div className="pres-detail-status__item" style={isIncome ? { textAlign: "left" } : {}}>
+          <span className="pres-detail-status__label">{isIncome ? "Total Ingresado" : "Restante"}</span>
+          <span className={`pres-detail-status__amount ${!isIncome && balance < 0 ? "danger" : "success"}`}>
+            {fmt(isIncome ? executed : balance)}
           </span>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="pres-detail-bar-track">
-        <div
-          className={`pres-detail-bar-fill pres-cat-item__bar-fill ${barClass}`}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      {!isIncome && (
+        <div className="pres-detail-bar-track">
+          <div
+            className={`pres-detail-bar-fill pres-cat-item__bar-fill ${barClass}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
 
       {/* warning */}
-      {progress > 90 && !isIncome && (
+      {!isIncome && progress > 90 && (
         <div
           style={{
             display: "flex",

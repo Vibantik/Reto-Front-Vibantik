@@ -36,7 +36,7 @@ export default function CategoryDetailView({
   const montoLimite = catMonto?.monto_asignado || 0;
   const Icon = ICON_MAP[icon] || Settings;
 
-  const isIncome = normName === "ingresos";
+  const isIncome = normName === "ingresos" || normName === "ingreso";
 
   // filtrar transacciones de categoria escogida
   const catTxns = useMemo(
