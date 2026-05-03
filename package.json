@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:transactions": "cypress run --spec cypress/e2e/transactions.cy.js"
+    "cy:transactions": "cypress run --spec cypress/e2e/transactions.cy.js",
+    "cy:hu01": "cypress run --spec cypress/e2e/hu01.presupuestos.cy.js",
+    "cy:hu02": "cypress run --spec cypress/e2e/hu02.presupuestos.cy.js",
+    "cy:unit": "cypress run --component --spec 'cypress/unitTests/**/*.cy.js'",
+    "cy:presupuestos": "cypress run --spec 'cypress/e2e/hu01.presupuestos.cy.js,cypress/e2e/hu02.presupuestos.cy.js'"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
