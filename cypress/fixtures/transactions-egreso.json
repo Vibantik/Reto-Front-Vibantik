@@ -1,0 +1,10 @@
+{
+  "data": [
+    { "id": 1, "date": "2026-04-10", "description": "Starbucks", "category": "Comida", "type": "egreso", "amount": 89 },
+    { "id": 2, "date": "2026-04-10", "description": "Uber", "category": "Transporte", "type": "egreso", "amount": 145.5 },
+    { "id": 4, "date": "2026-04-09", "description": "Oxxo Campus Tec", "category": "Comida", "type": "egreso", "amount": 66.5 },
+    { "id": 5, "date": "2026-04-08", "description": "Netflix", "category": "Entretenimiento", "type": "egreso", "amount": 219 },
+    { "id": 6, "date": "2026-04-08", "description": "Gasolina", "category": "Transporte", "type": "egreso", "amount": 950 }
+  ],
+  "pagination": { "page": 1, "limit": 15, "totalItems": 15, "totalPages": 2, "hasNextPage": true, "hasPrevPage": false }
+}

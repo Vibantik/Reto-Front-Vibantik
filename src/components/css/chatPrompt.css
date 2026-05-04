@@ -1,0 +1,56 @@
+/* used in PromptSuggestion */
+
+.chatbot-suggestions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0 1rem 0.75rem 1rem;
+    margin-top: auto;
+}
+
+.chatbot-suggestions-title {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.chatbot-suggestions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    cursor: pointer;
+    border-radius: 9999px;
+    /* pill shapeddd */
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.prompt-btn:hover {
+    background-color: #fff5f5;
+    border-color: #ec0029;
+    color: #ec0029;
+}
+
+.prompt-text-muted {
+    white-space: pre-wrap;
+}
+
+.prompt-text-highlight {
+    font-weight: 600;
+    white-space: pre-wrap;
+    transition: color 0.2s;
+}

@@ -15,3 +15,14 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
+
+beforeEach(() => {
+  cy.intercept('GET', '**/api/transactions/stream', (req) => {
+    req.reply({ statusCode: 200, headers: { 'Content-Type': 'text/event-stream' }, body: '' })
+  })
+
+  cy.intercept('GET', /\/api\/transactions\?.*type=ingreso/, { fixture: 'transactions-ingreso.json' })
+  cy.intercept('GET', /\/api\/transactions\?.*type=egreso/, { fixture: 'transactions-egreso.json' })
+  cy.intercept('GET', /\/api\/transactions\?.*category=Comida/, { fixture: 'transactions-comida.json' })
+  cy.intercept('GET', /\/api\/transactions(\?(?!.*type=ingreso)(?!.*type=egreso)(?!.*category=Comida).*)?$/, { fixture: 'transactions.json' })
+})
