@@ -1,0 +1,371 @@
+.inversiones-screen {
+  padding: 1.5rem;
+  width: 100%;
+}
+
+.inversiones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.inversiones-kicker {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.inversiones-header h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  color: #1a1a1a;
+}
+
+.inversiones-total {
+  text-align: right;
+}
+
+.inversiones-total p {
+  margin: 0;
+}
+
+.inversiones-total .label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.inversiones-total .monto {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.inversiones-total .ganancia {
+  font-size: 0.85rem;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.inversiones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.inversion-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  color: #1a1a1a;
+}
+
+.inversion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.inversion-nombre {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.inversion-tipo {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.inversion-estatus {
+  font-size: 0.68rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.estatus-activa {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.estatus-vencida {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.inversion-monto {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.inversion-detalles {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.75rem;
+}
+
+.inversion-detalles strong {
+  display: block;
+  color: #1a1a1a;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.inversion-progreso-bar {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.inversion-progreso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c8102e, #e10600);
+  border-radius: 999px;
+}
+
+/* FONDOS DE INVERSION */
+
+/* extension de inversion-card */
+.fondo-card {
+  gap: 1rem;
+}
+
+.fondo-kpi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.fondo-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fondo-kpi-right {
+  text-align: right;
+}
+
+.fondo-kpi-label {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fondo-rendimiento-valor {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.fondo-tasa-row {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.75rem;
+}
+
+.cambio-positivo {
+  color: #16a34a;
+}
+
+.cambio-negativo {
+  color: #dc2626;
+}
+
+.fondo-chart-wrapper {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 0.75rem;
+}
+
+.fondo-chart-title {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem;
+}
+
+.fondo-chart-hint {
+  font-size: 0.72rem;
+  color: #d1d5db;
+  text-align: center;
+  margin-top: 0.4rem;
+}
+
+.fondo-selected-point {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  animation: fadeSlideUp 0.2s ease-out;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fondo-selected-fecha {
+  font-size: 0.8rem;
+  color: #6b7280;
+  flex: 1;
+}
+
+.fondo-selected-tasa {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ec0029;
+}
+
+.fondo-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.fondo-clear-btn:hover {
+  color: #ec0029;
+}
+
+.fondo-tooltip {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+  font-size: 12px;
+  min-width: 160px;
+}
+
+.fondo-tooltip-fecha {
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 4px;
+}
+
+.fondo-tooltip-valor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ec0029;
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0;
+}
+
+.fondo-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ec0029;
+  flex-shrink: 0;
+}
+
+.fondo-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fondo-list-nombre-col {
+  flex: 1 1 120px;
+}
+
+.fondo-list-stats {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fondo-list-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fondo-list-stat--right {
+  text-align: right;
+}
+
+.fondo-list-stat-valor {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.fondo-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ec0029;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.fondo-toggle-btn:hover {
+  background: #fff5f5;
+}
+
+.fondo-toggle-chevron {
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 0.2s;
+}
+
+.fondo-toggle-chevron--up {
+  transform: rotate(-90deg);
+}
+
+.fondo-list-item {
+  padding: 1rem 1.25rem;
+}

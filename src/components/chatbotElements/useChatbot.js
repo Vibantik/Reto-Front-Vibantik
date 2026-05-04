@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { OLLAMA_URL, MODEL, SYSTEM_PROMPT } from "./config";
 import { sanitize } from "./sanitizer";
+import { getUserUuid } from "../../utils/userUuid";
 
 const INITIAL_MESSAGES = [
   {
@@ -14,9 +14,32 @@ export function useChatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const abortRef = useRef(null);
+  
+  // crear conversation
+  useEffect(() => {
+    const uuid_de_usuario = getUserUuid();
+
+    const initConversation = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/chat/conversation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uuid_de_usuario }) 
+        });
+        const data = await res.json();
+        if (data.id_conv) {
+          setConversationId(data.id_conv);
+        }
+      } catch (err) {
+        console.error("Error al iniciar la conversación en el backend:", err);
+      }
+    };
+    initConversation();
+  }, []);
 
   // auto scroll
   const scrollToBottom = useCallback(() => {
@@ -56,27 +79,21 @@ export function useChatbot() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // system prompt + history of convo = context 
     try {
-      const res = await fetch(OLLAMA_URL, {
+      const res = await fetch("http://localhost:3000/api/ia/agentic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...updatedMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-          ],
-          stream: true,
+          messages: updatedMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
         }),
         signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error("Error al conectar con Ollama");
-
+      if (!res.ok) throw new Error("Error al conectar con el backend");
+ 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = "";
@@ -106,6 +123,24 @@ export function useChatbot() {
         { role: "assistant", content: accumulated },
       ]);
       setStreamingText("");
+
+      // guardar mensaje del usuario y la respuesta !check ID de conversacion y respuesta valida
+      if (conversationId && accumulated.trim()) {
+        try {
+          await fetch("http://localhost:3000/api/chat/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id_conv: conversationId,
+              mensaje_usuario: text,
+              respuesta_ia: accumulated
+            }),
+          });
+        } catch (postErr) {
+          console.error("Error guardando el mensaje:", postErr);
+        }
+      }
+
     } catch (err) {
       if (err.name === "AbortError") return;
       setStreamingText("");
@@ -114,7 +149,7 @@ export function useChatbot() {
         {
           role: "assistant",
           content:
-            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama esté corriendo en localhost:11434.",
+            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama esté corriendo",
         },
       ]);
     } finally {

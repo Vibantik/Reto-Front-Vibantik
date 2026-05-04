@@ -6,7 +6,10 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
   const isIncome = transaction.type === "ingreso";
 
   return (
-    <article className={`transaction-card ${isExpanded ? "expanded" : ""}`}>
+    <article
+      data-cy="transaction-card"
+      className={`transaction-card ${isExpanded ? "expanded" : ""}`}
+    >
       <div className="transaction-card__summary">
         <div className="transaction-card__left">
           <div className="transaction-card__avatar">
@@ -20,8 +23,11 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
           <div className="transaction-card__info">
             <h4>{transaction.description}</h4>
             <p>{transaction.category}</p>
-            <span>{transaction.date}</span>
-          </div>
+<span>
+  {new Date(transaction.date.slice(0, 10) + "T12:00:00").toLocaleDateString("es-MX", {
+    day: "2-digit", month: "short", year: "numeric"
+  })}
+</span>          </div>
         </div>
 
         <div className="transaction-card__right">
@@ -37,10 +43,15 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
           </span>
 
           <button
+            data-cy="transaction-toggle"
             type="button"
             className={`transaction-chevron-btn ${isExpanded ? "open" : ""}`}
             onClick={onToggle}
-            aria-label={isExpanded ? "Ocultar detalle del movimiento" : "Ver detalle del movimiento"}
+            aria-label={
+              isExpanded
+                ? "Ocultar detalle del movimiento"
+                : "Ver detalle del movimiento"
+            }
             aria-expanded={isExpanded}
           >
             <ChevronRight size={24} className="transaction-chevron" />

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+// src/components/TransactionsPanel.jsx
+import { useEffect, useState, useMemo } from "react";
+import { fetchTransactions } from "../services/transactionsService";
 import TransactionSearch from "./TransactionSearch";
 import TransactionFilters from "./TransactionFilters";
 import TransactionList from "./TransactionList";
@@ -6,88 +8,94 @@ import Pagination from "./Pagination";
 import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
-function TransactionsPanel() {
-  const [transactions, setTransactions] = useState([]);
-  const [monthlyTransactions, setMonthlyTransactions] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 15,
-    totalItems: 0,
-    totalPages: 1,
-    hasNextPage: false,
-    hasPrevPage: false,
-  });
+const SSE_URL = "http://localhost:3000/api/transactions/stream";
 
+function TransactionsPanel({ showChart = true }) {
+  const [searchTerm, setSearchTerm]           = useState("");
+  const [selectedType, setSelectedType]       = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [startDate, setStartDate]             = useState("");
+  const [endDate, setEndDate]                 = useState("");
+  const [currentPage, setCurrentPage]         = useState(1);
+
+  const [transactions, setTransactions]   = useState([]);
+  const [pagination, setPagination]       = useState({
+    page: 1, limit: 15, totalItems: 0, totalPages: 1,
+    hasNextPage: false, hasPrevPage: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  // Resetear página al cambiar filtros
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
+  // Fetch al backend cada vez que cambia página o filtros
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const params = new URLSearchParams({
+        const result = await fetchTransactions({
           page: currentPage,
           limit: 15,
+          type: selectedType,
+          category: selectedCategory,
+          search: searchTerm,
+          startDate,
+          endDate,
         });
-
-        if (selectedType !== "all") params.append("type", selectedType);
-        if (selectedCategory !== "all") params.append("category", selectedCategory);
-        if (searchTerm) params.append("search", searchTerm);
-        if (startDate) params.append("startDate", startDate);
-        if (endDate) params.append("endDate", endDate);
-
-        const response = await fetch(
-          `http://localhost:3000/api/transactions?${params.toString()}`
-        );
-
-        const result = await response.json();
-
-        setTransactions(result.data || []);
-        setPagination(result.pagination || {});
-      } catch (error) {
-        console.error("Error al obtener transacciones:", error);
+        setTransactions(result.data);
+        setPagination(result.pagination);
+      } catch (err) {
+        setError("No se pudieron cargar las transacciones.");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchTransactions();
+    load();
   }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
   useEffect(() => {
-    const fetchMonthlyFlow = async () => {
+    const eventSource = new EventSource(SSE_URL);
+
+    eventSource.addEventListener("new-transaction", (event) => {
       try {
-        const now = new Date();
-        const month = now.getMonth();
-        const year = now.getFullYear();
+        const newTransaction = JSON.parse(event.data);
 
-        const firstDay = new Date(year, month, 1).toISOString().slice(0, 10);
-        const lastDay = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+        
+        setTransactions((prev) => [newTransaction, ...prev]);
 
-        const params = new URLSearchParams({
-          page: 1,
-          limit: 300,
-          startDate: firstDay,
-          endDate: lastDay,
-        });
-
-        const response = await fetch(
-          `http://localhost:3000/api/transactions?${params.toString()}`
-        );
-
-        const result = await response.json();
-        setMonthlyTransactions(result.data || []);
-      } catch (error) {
-        console.error("Error al obtener flujo mensual:", error);
+        setPagination((prev) => ({
+          ...prev,
+          totalItems: prev.totalItems + 1,
+        }));
+      } catch (err) {
+        console.error(err);
       }
+    });
+
+    eventSource.onerror = (err) => {
+      console.error(err);
     };
 
-    fetchMonthlyFlow();
-  }, []);
+    return () => {
+      eventSource.close();
+    };
+  }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
+
+  // Para el chart sólo usamos las transacciones del mes ya cargadas  
+  const monthlyTransactions = useMemo(() => {
+  const now = new Date();
+  return transactions.filter((t) => {
+    // Tomar solo YYYY-MM-DD ignorando timezone
+    const dateStr = t.date.slice(0, 10);
+    const [year, month] = dateStr.split("-").map(Number);
+    return year === now.getFullYear() && month === now.getMonth() + 1;
+  });
+}, [transactions]);
 
   return (
     <section className="transactions-screen">
@@ -97,35 +105,29 @@ function TransactionsPanel() {
           <h2>Movimientos</h2>
         </div>
         <span className="transactions-counter">
-          {pagination.totalItems || 0} resultados
+          {pagination.totalItems} resultados
         </span>
       </div>
 
       <div className="transactions-toolbar">
-        <TransactionSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-
+        <TransactionSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <TransactionFilters
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
+          selectedType={selectedType}       setSelectedType={setSelectedType}
+          selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
+          startDate={startDate}             setStartDate={setStartDate}
+          endDate={endDate}                 setEndDate={setEndDate}
         />
       </div>
 
-      <CashflowChart transactions={monthlyTransactions} />
+      {showChart && <CashflowChart transactions={monthlyTransactions} />}
 
-      <TransactionList transactions={transactions} />
+      {loading && <p style={{ padding: "1rem" }}>Cargando transacciones...</p>}
+      {error   && <p style={{ padding: "1rem", color: "red" }}>{error}</p>}
+      {!loading && !error && <TransactionList transactions={transactions} />}
 
       <Pagination
-        currentPage={pagination.page || 1}
-        totalPages={pagination.totalPages || 1}
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
         onPageChange={setCurrentPage}
       />
     </section>
