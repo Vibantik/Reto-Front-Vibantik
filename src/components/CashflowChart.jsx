@@ -107,7 +107,7 @@ export default function CashflowChart({ transactions }) {
   const balance = totalIncome - totalExpense;
 
   return (
-    <section className="cashflow-card" aria-label="Grafica de ingresos y egresos">
+    <section className="cashflow-card" data-cy="cashflow-card" aria-label="Grafica de ingresos y egresos">
       <div className="cashflow-card__header">
         <div>
           <p className="cashflow-kicker">Visual de flujo</p>
@@ -137,7 +137,7 @@ export default function CashflowChart({ transactions }) {
         </div>
       </div>
 
-      <div className="cashflow-chart-wrap">
+      <div className="cashflow-chart-wrap" data-cy="cashflow-chart-wrap">
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={chartData} margin={{ top: 8, right: 10, bottom: 4, left: 10 }}>
             <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(91, 102, 112, 0.2)" />

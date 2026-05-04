@@ -4,8 +4,9 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   return (
-    <div className="pagination">
+    <div className="pagination" data-cy="transactions-pagination">
       <button
+        data-cy="pagination-prev"
         className="pagination-btn"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -13,10 +14,11 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
         Anterior
       </button>
 
-      <div className="pagination-pages">
+      <div className="pagination-pages" data-cy="pagination-pages">
         {pages.map((page) => (
           <button
             key={page}
+            data-cy={`pagination-page-${page}`}
             className={`pagination-number ${currentPage === page ? "active" : ""}`}
             onClick={() => onPageChange(page)}
           >
@@ -26,6 +28,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       </div>
 
       <button
+        data-cy="pagination-next"
         className="pagination-btn"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
