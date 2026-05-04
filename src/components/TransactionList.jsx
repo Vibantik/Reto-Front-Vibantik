@@ -17,7 +17,7 @@ function TransactionList({ transactions }) {
   }
 
   return (
-    <div className="transaction-list">
+    <div className="transaction-list" data-cy="transaction-list">
       {transactions.map((transaction) => (
         <TransactionItem
           key={transaction.id}

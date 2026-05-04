@@ -21,24 +21,27 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
           </div>
 
           <div className="transaction-card__info">
-            <h4>{transaction.description}</h4>
-            <p>{transaction.category}</p>
-<span>
-  {new Date(transaction.date.slice(0, 10) + "T12:00:00").toLocaleDateString("es-MX", {
-    day: "2-digit", month: "short", year: "numeric"
-  })}
-</span>          </div>
+            <h4 data-cy="transaction-description">{transaction.description}</h4>
+            <p data-cy="transaction-category">{transaction.category}</p>
+            <span data-cy="transaction-date">
+              {new Date(transaction.date.slice(0, 10) + "T12:00:00").toLocaleDateString("es-MX", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          </div>
         </div>
 
         <div className="transaction-card__right">
           <div className="transaction-card__amountRow">
             <ArrowUpRight size={18} className="amount-arrow" />
-            <strong className={isIncome ? "amount income" : "amount expense"}>
+            <strong data-cy="transaction-amount" className={isIncome ? "amount income" : "amount expense"}>
               {isIncome ? "+" : "-"}${transaction.amount.toLocaleString("es-MX")}
             </strong>
           </div>
 
-          <span className={`status-chip ${isIncome ? "income" : "expense"}`}>
+          <span data-cy="transaction-status" className={`status-chip ${isIncome ? "income" : "expense"}`}>
             {isIncome ? "Ingreso" : "Egreso"}
           </span>
 
