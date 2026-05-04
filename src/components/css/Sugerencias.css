@@ -1,0 +1,149 @@
+/* src/components/css/sugerencias.css */
+ 
+.sugerencias-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 28px;
+  height: 100%;
+}
+ 
+.sugerencias-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+ 
+.sugerencias-titulo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+ 
+.sugerencias-titulo {
+  font-family: "Gotham", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--banorte-dark-gray);
+  margin: 0;
+}
+ 
+.sugerencias-meta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+ 
+.sugerencias-badge {
+  font-family: "Roboto", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3B5BDB;
+  letter-spacing: 0.02em;
+}
+ 
+.sugerencias-badge--error {
+  background: #fff5f5;
+  color: var(--banorte-red);
+}
+ 
+.sugerencias-ia-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Gotham", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--banorte-content-4);
+  background: transparent;
+  color: var(--banorte-gray);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+ 
+.sugerencias-ia-btn:hover:not(:disabled) {
+  border-color: var(--banorte-red);
+  color: var(--banorte-red);
+  background: #fff5f5;
+}
+ 
+.sugerencias-ia-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+ 
+.sugerencias-subtitulo {
+  font-family: "Roboto", sans-serif;
+  font-size: 12px;
+  color: var(--banorte-content-3);
+  margin: 0 0 16px;
+}
+ 
+.sugerencias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+ 
+.sugerencia-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: transform 0.15s;
+  cursor: default;
+}
+ 
+.sugerencia-item:hover {
+  transform: translateX(3px);
+}
+ 
+.sugerencia-titulo {
+  font-family: "Gotham", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 3px;
+}
+ 
+.sugerencia-detalle {
+  font-family: "Roboto", sans-serif;
+  font-size: 12px;
+  color: var(--banorte-gray);
+  margin: 0;
+  line-height: 1.5;
+}
+ 
+.sugerencias-skeleton {
+  height: 62px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+ 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+ 
+.spin {
+  animation: spin 1s linear infinite;
+}
+ 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+ 
