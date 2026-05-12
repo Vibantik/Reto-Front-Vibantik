@@ -1,7 +1,7 @@
 import banorteLogo from "../assets/banorte-logo.png";
 
 export default function Header({ activeTab, onTabChange, toggleSidebar }) {
-  const tabs = ["Inicio", "Presupuestos", "Inversiones",  "Metas", "Transferencias", "Movimientos"];
+const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos"];
 
   return (
     <header className="header">
