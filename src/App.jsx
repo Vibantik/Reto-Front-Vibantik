@@ -11,6 +11,8 @@ import MetasPanel from "./components/MetasPanel";
 import Sidebar from "./components/Sidebar";
 import SugerenciasCard from "./components/SugerenciasCard";
 import { fetchInversiones } from "./services/inversionesService";
+import ReportesPanel from "./components/ReportesPanel";
+
 import "./App.css";
  
 function InversionInfoCard() {
@@ -110,6 +112,14 @@ export default function App() {
             </div>
           </main>
         );
+        case "Reportes":
+  return (
+    <main className="dashboard">
+      <div className="dashboard-row transactions-row">
+        <ReportesPanel />
+      </div>
+    </main>
+  );
       default:
         return (
           <main className="dashboard">
