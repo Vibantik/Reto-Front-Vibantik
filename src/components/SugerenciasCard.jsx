@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Lightbulb, RefreshCw, TrendingUp, AlertCircle, PiggyBank } from "lucide-react";
 import { fetchTransactions } from "../services/transactionsService";
 import { fetchInversiones } from "../services/inversionesService";
-import "./css/sugerencias.css";
+import "./css/Sugerencias.css";
  
 const API_URL = "http://localhost:3000";
  
