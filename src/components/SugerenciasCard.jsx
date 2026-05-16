@@ -5,7 +5,7 @@ import { fetchTransactions } from "../services/transactionsService";
 import { fetchInversiones } from "../services/inversionesService";
 import "./css/Sugerencias.css";
  
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL;
  
 async function generarConIA(resumen) {
   const prompt = `Eres un asesor financiero de Banorte. Analiza este resumen y da EXACTAMENTE 3 sugerencias cortas y accionables. Responde SOLO con JSON válido sin texto extra. Formato exacto: {"sugerencias":[{"titulo":"...","detalle":"...","tipo":"ahorro|inversion|alerta"}]}

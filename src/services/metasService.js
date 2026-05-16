@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const normalizeMeta = (meta, index) => {
   const id = meta.id_meta ?? meta.id ?? index + 1;
