@@ -2,18 +2,21 @@
 import { useState, useEffect } from "react";
 import { Lightbulb, RefreshCw, TrendingUp, AlertCircle, PiggyBank, Sparkles } from "lucide-react";
 import { fetchTransactions } from "../services/transactionsService";
-import { fetchInversiones }  from "../services/inversionesService";
-import AuraWrapped from "./AuraWrapped";
-import "./css/sugerencias.css";
-
-const API_URL = "http://localhost:3000";
-
-// ── Sugerencias con Ollama ────────────────────────────────────────────────────
-async function generarConIA(r) {
-  const prompt = `Eres asesor financiero de Banorte. Da EXACTAMENTE 3 sugerencias accionables. SOLO JSON sin texto extra:
-{"sugerencias":[{"titulo":"...","detalle":"...","tipo":"ahorro|inversion|alerta"}]}
-Datos: Egresos $${r.totalEgresos.toFixed(0)}, Mayor gasto ${r.categoriaTop} $${r.montoTop.toFixed(0)}, Transacciones ${r.numTransacciones}, Inversiones activas ${r.inversionesActivas}, Por vencer ${r.porVencer}`;
-
+import { fetchInversiones } from "../services/inversionesService";
+import "./css/Sugerencias.css";
+ 
+const API_URL = import.meta.env.VITE_API_URL;
+ 
+async function generarConIA(resumen) {
+  const prompt = `Eres un asesor financiero de Banorte. Analiza este resumen y da EXACTAMENTE 3 sugerencias cortas y accionables. Responde SOLO con JSON válido sin texto extra. Formato exacto: {"sugerencias":[{"titulo":"...","detalle":"...","tipo":"ahorro|inversion|alerta"}]}
+ 
+Datos del usuario:
+- Egresos del mes: $${resumen.totalEgresos.toFixed(0)} MXN
+- Mayor gasto en: ${resumen.categoriaTop} ($${resumen.montoTop.toFixed(0)})
+- Transacciones este mes: ${resumen.numTransacciones}
+- Inversiones activas: ${resumen.inversionesActivas} (total: $${resumen.totalInvertido.toFixed(0)} MXN)
+- Inversiones por vencer en 30 días: ${resumen.porVencer}`;
+ 
   const res = await fetch(`${API_URL}/api/ia/agentic`, {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ messages:[{ role:"user", content:prompt }] }),

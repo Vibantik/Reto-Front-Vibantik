@@ -25,7 +25,7 @@ export function useChatbot() {
 
     const initConversation = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/chat/conversation", {
+        const res = await fetch(import.meta.env.VITE_API_URL + "/api/chat/conversation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ uuid_de_usuario }) 
@@ -80,7 +80,7 @@ export function useChatbot() {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("http://localhost:3000/api/ia/agentic", {
+      const res = await fetch(import.meta.env.VITE_API_URL + "/api/ia/agentic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,7 +127,7 @@ export function useChatbot() {
       // guardar mensaje del usuario y la respuesta !check ID de conversacion y respuesta valida
       if (conversationId && accumulated.trim()) {
         try {
-          await fetch("http://localhost:3000/api/chat/message", {
+          await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

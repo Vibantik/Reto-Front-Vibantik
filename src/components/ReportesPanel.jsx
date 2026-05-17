@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import banorteLogo from "../assets/banorte-logo.png";
 
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const MESES = [
   { v: 1, l: "Enero" }, { v: 2, l: "Febrero" }, { v: 3, l: "Marzo" },
