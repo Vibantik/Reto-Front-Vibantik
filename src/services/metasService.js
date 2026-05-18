@@ -1,3 +1,5 @@
+import { getUserUuid } from "../utils/userUuid";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const normalizeMeta = (meta, index) => {
@@ -29,7 +31,7 @@ const getBackendErrorMessage = async (response) => {
   }
 };
 
-export const fetchMetas = async (uuid = "dbf9f839-b57e-415f-8b5b-9213524ed827") => {
+export const fetchMetas = async (uuid = getUserUuid()) => {
   const query = new URLSearchParams();
   if (uuid) query.set("uuid_de_usuario", uuid);
 
@@ -44,7 +46,7 @@ export const fetchMetas = async (uuid = "dbf9f839-b57e-415f-8b5b-9213524ed827") 
 };
 
 export const createMeta = async ({
-  uuid,
+  uuid = getUserUuid(),
   nombreMeta,
   monto,
   fechaInicio,
@@ -78,7 +80,7 @@ export const createMeta = async ({
 
 export const updateMeta = async ({
   idMeta,
-  uuid,
+  uuid = getUserUuid(),
   nombreMeta,
   monto,
   fechaInicio,
@@ -119,7 +121,7 @@ export const updateMeta = async ({
   return normalizeMeta(payload);
 };
 
-export const deleteMeta = async ({ idMeta, uuid }) => {
+export const deleteMeta = async ({ idMeta, uuid = getUserUuid() }) => {
   const query = new URLSearchParams({
     uuid_de_usuario: String(uuid ?? ""),
   });
