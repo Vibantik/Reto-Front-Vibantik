@@ -52,7 +52,7 @@ function TransactionItem({ transaction, isExpanded, onToggle }) {
                 ? "Ocultar detalle del movimiento"
                 : "Ver detalle del movimiento"
             }
-            aria-expanded={isExpanded}
+           aria-expanded={isExpanded ? "true" : "false"}
           >
             <ChevronRight size={24} className="transaction-chevron" />
           </button>

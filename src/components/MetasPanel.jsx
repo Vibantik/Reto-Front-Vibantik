@@ -288,31 +288,32 @@ function MetasPanel() {
   };
 
   const renderMetaCard = (meta) => (
-    <article key={meta.id} className="meta-item">
+    <article key={meta.id} className="meta-item" data-cy="meta-card">
       <div className="meta-item-top">
-        <h3>{meta.nombreMeta}</h3>
+        <h3 data-cy="meta-title">{meta.nombreMeta}</h3>
       </div>
 
-      <p className="meta-amount">{fmtCurrency(meta.monto)}</p>
+      <p className="meta-amount" data-cy="meta-amount">{fmtCurrency(meta.monto)}</p>
 
       <div className="meta-detail-grid">
         <p>
           <Target size={15} />
-          Plazo: <strong>{meta.plazoDias || "-"} dias</strong>
+          Plazo: <strong data-cy="meta-plazo">{meta.plazoDias || "-"} dias</strong>
         </p>
         <p>
           <CalendarDays size={15} />
-          Inicio: <strong>{fmtDate(meta.fechaInicio)}</strong>
+          Inicio: <strong data-cy="meta-fecha-inicio">{fmtDate(meta.fechaInicio)}</strong>
         </p>
         <p>
           <Flag size={15} />
-          Fin: <strong>{fmtDate(meta.fechaFin)}</strong>
+          Fin: <strong data-cy="meta-fecha-fin">{fmtDate(meta.fechaFin)}</strong>
         </p>
       </div>
 
       <div className="meta-progress-track" aria-hidden="true">
         <div
           className="meta-progress-fill"
+          data-cy="meta-progress-bar"
           style={{ width: `${Math.round(meta.progreso * 100)}%` }}
         ></div>
       </div>
@@ -321,6 +322,7 @@ function MetasPanel() {
         <button
           type="button"
           className="meta-edit-btn"
+          data-cy="meta-edit-btn"
           onClick={() => openEditModal(meta)}
           disabled={deletingId === meta.id}
         >
@@ -329,6 +331,7 @@ function MetasPanel() {
         <button
           type="button"
           className="meta-delete-btn"
+          data-cy="meta-delete-btn"
           onClick={() => handleDeleteMeta(meta.id)}
           disabled={deletingId === meta.id}
         >
@@ -344,10 +347,10 @@ function MetasPanel() {
     const totalInCategory = sectionedMetas[sectionKey].length;
 
     return (
-      <section key={sectionKey} className="metas-section">
+      <section key={sectionKey} className="metas-section" data-cy={`metas-section-${sectionKey}`}>
         <div className="metas-section-header">
           <h3>{title}</h3>
-          <span className="metas-section-tag">
+          <span className="metas-section-tag" data-cy={`metas-section-tag-${sectionKey}`}>
             {sectionItems.length} en esta pagina · {totalInCategory} total
           </span>
         </div>
@@ -374,6 +377,7 @@ function MetasPanel() {
           <button
             type="button"
             className="metas-create-btn"
+            data-cy="metas-create-btn"
             onClick={openCreateModal}
           >
             Anadir meta
@@ -384,10 +388,12 @@ function MetasPanel() {
       {formOpen && (
         <div
           className="metas-modal-overlay"
+          data-cy="metas-modal-overlay"
           onClick={closeModal}
         >
           <div
             className="metas-modal"
+            data-cy="metas-modal"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -398,18 +404,20 @@ function MetasPanel() {
               <button
                 type="button"
                 className="metas-close-btn"
+                data-cy="metas-modal-close-btn"
                 onClick={closeModal}
               >
                 Cerrar
               </button>
             </div>
 
-            <form className="metas-form" onSubmit={handleCreateMeta}>
+            <form className="metas-form" data-cy="metas-form" onSubmit={handleCreateMeta}>
               <label>
                 Titulo de la meta
                 <input
                   type="text"
                   name="nombreMeta"
+                  data-cy="metas-form-nombre"
                   value={formData.nombreMeta}
                   onChange={handleInputChange}
                   placeholder="Ej. Viaje familiar"
@@ -422,6 +430,7 @@ function MetasPanel() {
                 <input
                   type="number"
                   name="monto"
+                  data-cy="metas-form-monto"
                   value={formData.monto}
                   onChange={handleInputChange}
                   min="1"
@@ -436,6 +445,7 @@ function MetasPanel() {
                   <input
                     type="date"
                     name="fechaInicio"
+                    data-cy="metas-form-fecha-inicio"
                     value={formData.fechaInicio}
                     onChange={handleInputChange}
                     min={todayInput}
@@ -448,6 +458,7 @@ function MetasPanel() {
                   <input
                     type="date"
                     name="fechaFin"
+                    data-cy="metas-form-fecha-fin"
                     value={formData.fechaFin}
                     onChange={handleInputChange}
                     min={formData.fechaInicio || todayInput}
@@ -460,6 +471,7 @@ function MetasPanel() {
                 <button
                   type="submit"
                   className="metas-submit-btn"
+                  data-cy="metas-form-submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting
@@ -470,7 +482,7 @@ function MetasPanel() {
                 </button>
               </div>
               {submitError && (
-                <p className="metas-state metas-state-error">{submitError}</p>
+                <p className="metas-state metas-state-error" data-cy="metas-form-error">{submitError}</p>
               )}
             </form>
           </div>
@@ -490,24 +502,26 @@ function MetasPanel() {
               {SECTION_DEFINITIONS.map(({ key, title }) => renderSection(key, title))}
 
               <div className="metas-pagination">
-                <p className="metas-pagination-summary">
+                <p className="metas-pagination-summary" data-cy="metas-pagination-summary">
                   Mostrando {firstItemIndex}-{lastItemIndex} de {metas.length}
                 </p>
                 <div className="metas-pagination-controls">
                   <button
                     type="button"
                     className="metas-page-btn"
+                    data-cy="metas-page-prev"
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                   >
                     Anterior
                   </button>
-                  <span className="metas-page-indicator">
+                  <span className="metas-page-indicator" data-cy="metas-page-indicator">
                     Pagina {currentPage} de {totalPages}
                   </span>
                   <button
                     type="button"
                     className="metas-page-btn"
+                    data-cy="metas-page-next"
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                   >
