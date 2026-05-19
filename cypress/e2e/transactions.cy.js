@@ -1,7 +1,58 @@
 describe('Transacciones E2E', () => {
   beforeEach(() => {
+    cy.intercept('GET', '**/api/transactions*', (req) => {
+      const url = new URL(req.url)
+      const query = url.searchParams.get('search') || ''
+      
+      const transactions = [
+        {
+          id: 'tx-1',
+          description: 'OXXO',
+          category: 'Compras',
+          date: '2026-05-10',
+          amount: 50,
+          type: 'egreso'
+        },
+        {
+          id: 'tx-2',
+          description: 'Starbucks',
+          category: 'Comida',
+          date: '2026-05-10',
+          amount: 89,
+          type: 'egreso'
+        },
+        {
+          id: 'tx-3',
+          description: 'Nomina',
+          category: 'Ingreso',
+          date: '2026-05-15',
+          amount: 15000,
+          type: 'ingreso'
+        }
+      ]
+      
+      let filtered = transactions
+      if (query.toLowerCase() === 'oxxo') {
+        filtered = [transactions[0]]
+      } else if (url.searchParams.get('type') === 'ingreso') {
+        filtered = [transactions[2]]
+      } else if (url.searchParams.get('type') === 'egreso') {
+        filtered = [transactions[0], transactions[1]]
+      } else if (url.searchParams.get('category') === 'Comida') {
+        filtered = [transactions[1]]
+      }
+
+      req.reply({
+        body: {
+          data: filtered,
+          pagination: { totalItems: filtered.length, page: 1, limit: 15, totalPages: 1 }
+        }
+      })
+    }).as('getTransactions')
+
     cy.visit('/')
     cy.contains('Movimientos').click()
+    cy.wait('@getTransactions')
     cy.contains('Tipo').should('be.visible')
   })
 
