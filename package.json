@@ -11,7 +11,8 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:transactions": "cypress run --spec cypress/e2e/transactions.cy.js",
-    "test:e2e": "cypress run"
+    "test:e2e": "cypress run",
+    "infisical-dev": "infisical run -- npm run dev"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
