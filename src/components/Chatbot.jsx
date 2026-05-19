@@ -1,9 +1,10 @@
+import React, { useState, useEffect } from "react";
 import { useChatbot } from "./chatbotElements/useChatbot";
 import { X, Send } from "lucide-react";
 import PromptContainer from "./chatbotElements/PromptContainer";
 import ChatBubble from "./chatbotElements/ChatBubble";
 
-export default function Chatbot({ open, onClose, uuid }) {
+export default function Chatbot({ open, onClose, systemPrompt = null, suggestions = null, initialUserMessage = null }) {
   const { messages,
     input,
     setInput,
@@ -12,8 +13,34 @@ export default function Chatbot({ open, onClose, uuid }) {
     messagesEndRef,
     sendMessage,
     handleKeyDown,
-    appendMessage,
-  } = useChatbot(uuid);
+  } = useChatbot({ systemPrompt });
+
+  // auto-send initial message when provided
+  const [sentInitial, setSentInitial] = useState(false);
+  useEffect(() => {
+    if (open && initialUserMessage && !sentInitial) {
+      setInput(initialUserMessage);
+      // small timeout to ensure state updates
+      setTimeout(() => {
+        sendMessage();
+        setSentInitial(true);
+      }, 50);
+    }
+  }, [open, initialUserMessage, sentInitial, setInput, sendMessage]);
+
+  // reset sentInitial when chatbot is closed or when a new initialUserMessage arrives
+  useEffect(() => {
+    if (!open) setSentInitial(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (initialUserMessage) setSentInitial(false);
+  }, [initialUserMessage]);
+
+  // if an initialUserMessage prop is provided, auto-send it when component mounts
+  // (accept prop if passed in via rest)
+  // we'll read it from props via arguments: second param not available; instead check window.__INITIAL_CHAT_MESSAGE (temporary) - but better accept prop
+  
 
   if (!open) return null;
 
@@ -28,8 +55,8 @@ export default function Chatbot({ open, onClose, uuid }) {
         </div>
 
         <div className="chatbot-messages">
-          {messages.map((msg, i) => (
-            <ChatBubble
+          {messages.filter(m => m.role !== "system").map((msg, i) => (
+            <div
               key={i}
               message={msg}
               onToolComplete={appendMessage}
@@ -57,7 +84,7 @@ export default function Chatbot({ open, onClose, uuid }) {
 
           <div ref={messagesEndRef} />
 
-          {messages.length === 1 && <PromptContainer setInput={setInput} />}
+          {messages.length === 1 && <PromptContainer setInput={setInput} suggestions={suggestions} />}
         </div>
 
         <div className="chatbot-input-area">

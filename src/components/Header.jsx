@@ -1,5 +1,6 @@
 import banorteLogo from "../assets/banorte-logo.png";
 
+<<<<<<< HEAD
 const getInitials = (user) => {
   if (!user) return "?";
   return `${user.nombre?.[0] ?? ""}${user.apellido?.[0] ?? ""}`.toUpperCase();
@@ -7,6 +8,10 @@ const getInitials = (user) => {
 
 export default function Header({ activeTab, onTabChange, toggleSidebar, activeUser }) {
   const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos"];
+=======
+export default function Header({ activeTab, onTabChange, toggleSidebar }) {
+  const tabs = ["Inicio", "Presupuestos", "Inversiones",  "Metas", "Transferencias", "Movimientos"];
+>>>>>>> 78da039 (inversiones IA)
 
   return (
     <header className="header">

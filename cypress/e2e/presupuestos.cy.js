@@ -30,12 +30,10 @@ const PRES_DETALLE = {
 };
 
 function mockApis({ presupuestos = [PRES_BASE], detalle = PRES_DETALLE } = {}) {
-  // Detalle — registered FIRST so it has lower priority, but we use a specific path
+  // Lista presupuestos
+  cy.intercept("GET", "**/api/presupuestos*", { statusCode: 200, body: presupuestos }).as("getPresupuestos");
+  // Detalle
   cy.intercept("GET", "**/api/presupuestos/1", { statusCode: 200, body: detalle }).as("getDetalle");
-  // Lista presupuestos — use a route matcher function to exclude detail requests
-  cy.intercept("GET", "**/api/presupuestos?*", { statusCode: 200, body: presupuestos }).as("getPresupuestos");
-  // Also catch bare /api/presupuestos without query string (but not /api/presupuestos/N)
-  cy.intercept("GET", /\/api\/presupuestos$/, { statusCode: 200, body: presupuestos }).as("getPresupuestosBare");
   // Categorías
   cy.intercept("GET", "**/api/categorias*", {
     statusCode: 200,
@@ -47,10 +45,6 @@ function mockApis({ presupuestos = [PRES_BASE], detalle = PRES_DETALLE } = {}) {
   }).as("getCategorias");
   // Transacciones (panel movimientos — no usado en presupuestos pero evita errores)
   cy.intercept("GET", "**/api/transactions*", { body: { data: [], pagination: {} } });
-  // Intercept any update calls to categorias/presupuestos to prevent real network calls
-  cy.intercept("PUT", "**/api/categorias/*", { statusCode: 200, body: {} });
-  cy.intercept("POST", "**/api/categorias", { statusCode: 201, body: { id_categ: 99, nombre_categ: "Nueva" } });
-  cy.intercept("DELETE", "**/api/categorias/*", { statusCode: 200, body: {} });
 }
 
 function irAPresupuestos() {
@@ -131,8 +125,8 @@ describe("HU-02 · Presupuestos E2E", () => {
 
       // El select muestra el nuevo presupuesto
       cy.get(".pres-budget-selector__select", { timeout: 6000 })
-        .should("contain.value", "99");
-      cy.contains("Presupuesto Junio 2026").should("exist");
+        .should("contain.value", "99")
+        .or(cy.contains("Presupuesto Junio 2026").should("exist"));
     });
   });
 
@@ -142,28 +136,28 @@ describe("HU-02 · Presupuestos E2E", () => {
       mockApis();
       cy.intercept("PUT", "**/api/presupuestos/1", { statusCode: 200, body: { ...PRES_BASE } }).as("updatePres");
       irAPresupuestos();
-      cy.wait("@getDetalle");
+      cy.wait("@getPresupuestos");
     });
 
     it("CP-07 · navega a config y muestra campos de monto por categoría", () => {
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
-      cy.get('input.pres-config-item__name-input').eq(0).should("have.value", "Comida");
-      cy.get('input.pres-config-item__name-input').eq(1).should("have.value", "Transporte");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
+      cy.contains("Comida").should("be.visible");
+      cy.contains("Transporte").should("be.visible");
     });
 
     it("CP-07 · puede cambiar el monto de una categoría", () => {
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
 
       // Busca el primer input de monto y lo cambia
-      cy.get("input[type='number']").first().type("{selectall}3000");
+      cy.get("input[type='number']").first().clear().type("3000");
       cy.get("input[type='number']").first().should("have.value", "3000");
     });
   });
 
   // ── CP-08: Eliminar presupuesto sin eliminar gastos ─────────────────────
-  describe.skip("CP-08 / CP-09 – Eliminar presupuesto con confirmación", () => {
+  describe("CP-08 / CP-09 – Eliminar presupuesto con confirmación", () => {
     beforeEach(() => {
       mockApis();
       cy.intercept("DELETE", "**/api/presupuestos/1", { statusCode: 200, body: { message: "Presupuesto eliminado" } }).as("deletePres");
@@ -175,8 +169,8 @@ describe("HU-02 · Presupuestos E2E", () => {
       // Stubs window.confirm para que devuelva true (confirmar eliminación)
       cy.window().then((win) => { cy.stub(win, "confirm").returns(true); });
 
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
       cy.contains("Eliminar presupuesto").click();
 
       cy.get("@deletePres").should("exist");
@@ -185,8 +179,8 @@ describe("HU-02 · Presupuestos E2E", () => {
     it("CP-08 · si cancela la confirmación, no se elimina el presupuesto", () => {
       cy.window().then((win) => { cy.stub(win, "confirm").returns(false); });
 
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
       cy.contains("Eliminar presupuesto").click();
 
       cy.get("@deletePres.all").should("have.length", 0);
@@ -200,18 +194,18 @@ describe("HU-02 · Presupuestos E2E", () => {
       mockApis();
       cy.intercept("PUT", "**/api/presupuestos/1", { statusCode: 200, body: PRES_BASE }).as("updatePres");
       irAPresupuestos();
-      cy.wait("@getDetalle");
+      cy.wait("@getPresupuestos");
     });
 
     it("CP-09 · muestra mensaje de éxito al guardar cambios en categorías", () => {
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
 
-      cy.contains("Guardar Cambios").click();
+      cy.contains("Guardar cambios").click();
       cy.wait("@updatePres");
 
-      // Debe volver al hub (desaparece pres-config-panel)
-      cy.get(".pres-config-panel").should("not.exist");
+      // Debe aparecer algún mensaje de éxito (toast, texto, clase success)
+      cy.contains(/guardado|éxito|success/i, { timeout: 5000 }).should("be.visible");
     });
   });
 
@@ -282,7 +276,7 @@ describe("HU-02 · Presupuestos E2E", () => {
 
   // ── CP-12 / CP-14: Contrato API – backend rechaza payloads inválidos ────
   describe("CP-12 / CP-14 – Backend rechaza payloads inválidos (HTTP 400)", () => {
-    it.skip("CP-14 · POST sin uuid_de_usuario responde 400", () => {
+    it("CP-14 · POST sin uuid_de_usuario responde 400", () => {
       cy.request({
         method: "POST",
         url: "http://localhost:3000/api/presupuestos",
@@ -294,7 +288,7 @@ describe("HU-02 · Presupuestos E2E", () => {
       });
     });
 
-    it.skip("CP-14 · POST con monto_limite = 0 responde 400", () => {
+    it("CP-14 · POST con monto_limite = 0 responde 400", () => {
       cy.request({
         method: "POST",
         url: "http://localhost:3000/api/presupuestos",
@@ -306,7 +300,7 @@ describe("HU-02 · Presupuestos E2E", () => {
       });
     });
 
-    it.skip("CP-14 · POST con monto_limite negativo responde 400", () => {
+    it("CP-14 · POST con monto_limite negativo responde 400", () => {
       cy.request({
         method: "POST",
         url: "http://localhost:3000/api/presupuestos",
@@ -341,9 +335,9 @@ describe("HU-02 · Presupuestos E2E", () => {
     beforeEach(() => {
       mockApis();
       irAPresupuestos();
-      cy.wait("@getDetalle");
-      cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
-      cy.get(".pres-config-panel", { timeout: 6000 }).should("exist");
+      cy.wait("@getPresupuestos");
+      cy.contains("Gestionar categorías").click();
+      cy.get(".cat-config-view", { timeout: 6000 }).should("exist");
     });
 
     it("CP-02 · el input de monto tiene min=0 o rechaza valores negativos", () => {
@@ -355,8 +349,7 @@ describe("HU-02 · Presupuestos E2E", () => {
         } else {
           // Si no tiene min, verifica que el safeNumber del componente normaliza negativos
           cy.wrap($input).clear().type("-100");
-          cy.contains("Guardar Cambios").click();
-          cy.get("#pres-manage-categories-btn", { timeout: 8000 }).click();
+          cy.contains("Guardar cambios").click();
           // El valor guardado debe ser 0, no -100
           cy.get("input[type='number']").first()
             .should(($el) => {

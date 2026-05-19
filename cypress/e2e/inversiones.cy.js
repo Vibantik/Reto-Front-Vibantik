@@ -99,9 +99,8 @@ describe("HU-04 · Inversiones E2E", () => {
     });
  
     it("CP-01 · muestra la fecha de inicio y vencimiento", () => {
-      // InversionCardPlazo renders dates in spans with "Inicio" and "Vencimiento" labels
-      cy.contains("Inicio").should("be.visible");
-      cy.contains("Vencimiento").should("be.visible");
+      cy.contains(/01.*ene.*2026|2026-01-01/i).should("be.visible");
+      cy.contains(/31.*dic.*2026|2026-12-31/i).should("be.visible");
     });
  
     it("CP-01 · muestra el badge de estatus ACTIVA o VENCIDA", () => {
@@ -179,7 +178,7 @@ describe("HU-04 · Inversiones E2E", () => {
       cy.contains(/clic en un punto|detalle/i).should("be.visible");
     });
  
-    it.skip("CP-05 · al hacer clic en la gráfica muestra fecha y tasa del punto", () => {
+    it("CP-05 · al hacer clic en la gráfica muestra fecha y tasa del punto", () => {
       // Click en el área de la gráfica
       cy.get(".recharts-responsive-container").first().click(100, 90);
       // Después del click debe aparecer el panel de punto seleccionado
@@ -197,7 +196,7 @@ describe("HU-04 · Inversiones E2E", () => {
       cy.wait("@getInversionesByUser");
     });
  
-    it.skip("CP-06 · el panel de punto seleccionado tiene botón para limpiar selección", () => {
+    it("CP-06 · el panel de punto seleccionado tiene botón para limpiar selección", () => {
       cy.get(".recharts-responsive-container").first().click(100, 90);
       cy.get(".fondo-selected-point", { timeout: 4000 }).within(() => {
         cy.get(".fondo-clear-btn").should("exist").click();
@@ -304,7 +303,7 @@ describe("HU-04 · Inversiones E2E", () => {
  
   // ── CP-11: Contrato API GET /api/inversiones ──────────────────────────
   describe("CP-11 – Contrato mínimo de GET /api/inversiones", () => {
-    it.skip("CP-11 · la respuesta contiene los campos requeridos por la UI", () => {
+    it("CP-11 · la respuesta contiene los campos requeridos por la UI", () => {
       cy.request("GET", "http://localhost:3000/api/inversiones").then((res) => {
         expect(res.status).to.equal(200);
         expect(res.body).to.be.an("array");
@@ -322,7 +321,7 @@ describe("HU-04 · Inversiones E2E", () => {
       });
     });
  
-    it.skip("CP-11 · no expone campos sensibles como contraseña o uuid interno", () => {
+    it("CP-11 · no expone campos sensibles como contraseña o uuid interno", () => {
       cy.request("GET", "http://localhost:3000/api/inversiones").then((res) => {
         if (res.body.length > 0) {
           const item = res.body[0];

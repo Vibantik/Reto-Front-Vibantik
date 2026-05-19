@@ -1,54 +1,7 @@
 describe('Metas E2E', () => {
   beforeEach(() => {
-    cy.intercept('GET', '**/api/metas*', {
-      statusCode: 200,
-      body: {
-        data: [
-          {
-            id_meta: 1,
-            nombreMeta: 'Viaje a Japón',
-            monto_meta: '50000',
-            fecha_inicio: '2026-01-01',
-            fecha_fin: '2026-12-31',
-            plazo_dias: 365,
-            progreso: 0.35
-          },
-          {
-            id_meta: 2,
-            nombreMeta: 'Coche Nuevo',
-            monto_meta: '150000',
-            fecha_inicio: '2026-05-01',
-            fecha_fin: '2028-05-01',
-            plazo_dias: 730,
-            progreso: 0.10
-          }
-        ]
-      }
-    }).as('getMetas')
-    
-    // intercept POST, PUT, DELETE for creating/updating metas
-    cy.intercept('POST', '**/api/metas*', {
-      statusCode: 201,
-      body: { id_meta: 3, nombreMeta: 'Nueva', monto_meta: 5000 }
-    }).as('createMeta')
-
-    cy.intercept('PUT', '**/api/metas/*', {
-      statusCode: 200,
-      body: { id_meta: 1, nombreMeta: 'Viaje a Japón Actualizado', monto_meta: 55000 }
-    }).as('updateMeta')
-    
-    cy.intercept('DELETE', '**/api/metas/*', {
-      statusCode: 200,
-      body: { success: true }
-    }).as('deleteMeta')
-
-    // Mock other requests so they don't block
-    cy.intercept("GET", "**/api/transactions*", { body: { data: [], pagination: {} } });
-    cy.intercept("GET", "**/api/presupuestos*", { body: [] });
-
     cy.visit('/')
     cy.contains('Metas').click()
-    cy.wait('@getMetas')
     cy.get('[data-cy="metas-create-btn"]').should('be.visible')
   })
 
@@ -86,9 +39,11 @@ describe('Metas E2E', () => {
   })
 
   it('la barra de progreso tiene ancho correcto', () => {
-    cy.get('[data-cy="meta-progress-bar"]').first()
-      .should('have.attr', 'style')
-      .and('include', 'width:');
+    cy.get('[data-cy="meta-progress-bar"]').first().then(($bar) => {
+      const width = $bar.width()
+      expect(width).to.be.greaterThan(0)
+      expect(width).to.be.lessThanOrEqual($bar.parent().width())
+    })
   })
 
   it('agrupa metas por secciones', () => {
@@ -198,7 +153,7 @@ describe('Metas E2E', () => {
     cy.get('[data-cy="metas-form-fecha-inicio"]').type(tomorrowStr)
     cy.get('[data-cy="metas-form-fecha-fin"]').type(yesterdayStr)
     
-    cy.get('[data-cy="metas-form"]').submit()
+    cy.get('[data-cy="metas-form-submit"]').click()
     
     cy.get('[data-cy="metas-form-error"]').should('contain.text', 'fecha limite no puede ser menor')
   })
