@@ -343,6 +343,12 @@ describe("HU-07 · Chatbot Asesor IA E2E", () => {
       cy.wait("@iaError2");
 
       cy.get(".chatbot-input", { timeout: 5000 }).should("not.be.disabled");
+      // El input se vació al enviar, por lo tanto el botón debe estar deshabilitado por falta de texto
+      cy.get(".chatbot-send").should("be.disabled");
+
+      // Si escribimos de nuevo, el botón se habilita
+      cy.get(".chatbot-input").should('not.be.disabled').type("intentar de nuevo", { delay: 50 });
+      cy.get(".chatbot-input").should('have.value', 'intentar de nuevo');
       cy.get(".chatbot-send").should("not.be.disabled");
     });
 
