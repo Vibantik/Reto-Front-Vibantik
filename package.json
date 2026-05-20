@@ -14,7 +14,8 @@
     "cy:hu01": "cypress run --spec cypress/e2e/hu01.presupuestos.cy.js",
     "cy:hu02": "cypress run --spec cypress/e2e/hu02.presupuestos.cy.js",
     "cy:unit": "cypress run --component --spec 'cypress/unitTests/**/*.cy.js'",
-    "cy:presupuestos": "cypress run --spec 'cypress/e2e/hu01.presupuestos.cy.js,cypress/e2e/hu02.presupuestos.cy.js'"
+    "cy:presupuestos": "cypress run --spec 'cypress/e2e/hu01.presupuestos.cy.js,cypress/e2e/hu02.presupuestos.cy.js'",
+    "test:e2e": "cypress run"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
