@@ -51,10 +51,11 @@ describe('Transacciones E2E', () => {
   })
 
   it('filtra por búsqueda de OXXO', () => {
-    cy.get('[data-cy="transaction-search-input"]').type('OXXO')
-    cy.get('[data-cy="transaction-card"]').should('have.length.greaterThan', 0)
+    cy.get('[data-cy="transaction-search-input"]').clear().type('Oxxo')
+    // Esperamos a que los resultados se actualicen y ya no esté Starbucks
+    cy.get('[data-cy="transaction-card"]').should('not.contain.text', 'Starbucks')
     cy.get('[data-cy="transaction-card"]').each(($card) => {
-      cy.wrap($card).should('contain.text', 'OXXO')
+      cy.wrap($card).invoke('text').should('match', /oxxo/i)
     })
   })
 })

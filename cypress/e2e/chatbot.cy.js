@@ -343,6 +343,7 @@ describe("HU-07 · Chatbot Asesor IA E2E", () => {
       cy.wait("@iaError2");
 
       cy.get(".chatbot-input", { timeout: 5000 }).should("not.be.disabled");
+      cy.get(".chatbot-input").type("Reintento");
       cy.get(".chatbot-send").should("not.be.disabled");
     });
 
