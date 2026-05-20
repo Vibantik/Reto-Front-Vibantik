@@ -15,7 +15,9 @@
     "cy:hu02": "cypress run --spec cypress/e2e/hu02.presupuestos.cy.js",
     "cy:unit": "cypress run --component --spec 'cypress/unitTests/**/*.cy.js'",
     "cy:presupuestos": "cypress run --spec 'cypress/e2e/hu01.presupuestos.cy.js,cypress/e2e/hu02.presupuestos.cy.js'",
-    "test:e2e": "cypress run"
+    "test:e2e": "cypress run",
+    "infisical:dev": "infisical run -- npm run dev",
+    "infisical:login": "infisical login"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@infisical/cli": "^0.43.84",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
