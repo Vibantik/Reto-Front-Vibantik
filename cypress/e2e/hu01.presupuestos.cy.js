@@ -6,11 +6,19 @@ PRUEBAS E2E – HU-01: Visualizar el progreso de mis gastos
 Técnica: E2E (Cypress) sobre http://localhost:5173
 
 CP-CA01 cubiertos:
+   CP-01 (CA0101)        – Validar visualización de resumen en página principal
+   CP-02 (CA0102)        – Validar desglose detallado y barras de progreso
+   CP-03 (CA0103)        – Validar sugerencia de redistribución (IA)
+   CP-04 (CA0104)        – Validar alerta preventiva de exceso (IA)
+   CP-05 (CA0105)        – Validar mensaje de racha de 7 días
+   CP-06 (CA0106)        – Validar historial de presupuestos pasados
+   CP-07 (CA0107)        – Validar actualización en tiempo real de gastos
    CP-08 (CA0108/CA0109) – Resumen y selector del presupuesto activo
    CP-09 (CA0109)        – Estado vacío cuando no existen presupuestos
    CP-11 (CA0111)        – Apertura de detalle por clic y por teclado (accesibilidad)
    CP-12 (CA0112)        – Balance y porcentaje consumido reflejados en UI
    CP-13 (CA0113)        – Fallback de icono/color/monto en categoría incompleta
+   CP-14 (CA0114)        – Sugerencias del dashboard con IA y respaldo por reglas
 */
 
 const API_URL = "http://localhost:3000";
@@ -77,11 +85,23 @@ const PRESUPUESTO_INCOMPLETO = {
 function interceptNormalFlow() {
   cy.intercept("GET", `${API_URL}/api/categorias`, { body: [] }).as("getCategorias");
   cy.intercept("GET", `${API_URL}/api/presupuestos?uuid=${TEST_UUID}`, {
-    body: [PRESUPUESTO_FIXTURE],
-  }).as("getPresupuestos");
+    body: [PRESUPUESTO_FIXTURE, ...Array.from({ length: 3 }).map((_, i) => ({
+      ...PRESUPUESTO_FIXTURE,
+      id_presupuesto: i + 3,
+      nombre: `Mes pasado ${i}`,
+      inicio: `2026-0${4 - i}-01`,
+      fin: `2026-0${4 - i}-30`
+    }))]
+  }).as("getMultiplePresupuestos");
   cy.intercept("GET", `${API_URL}/api/presupuestos/${PRESUPUESTO_FIXTURE.id_presupuesto}`, {
     body: PRESUPUESTO_FIXTURE,
   }).as("getDetalle");
+  cy.intercept("GET", `${API_URL}/api/transactions*`, {
+    body: { data: PRESUPUESTO_FIXTURE.transacciones }
+  }).as("getTransactions");
+  cy.intercept("GET", `${API_URL}/api/inversiones`, {
+    body: []
+  }).as("getInversiones");
 }
 
 function navigateToPresupuestos() {
@@ -95,7 +115,7 @@ describe("HU-01 | CP-08 (CA0108) – Resumen y selector del presupuesto activo",
   beforeEach(() => {
     interceptNormalFlow();
     navigateToPresupuestos();
-    cy.wait("@getPresupuestos");
+    cy.wait("@getMultiplePresupuestos");
     cy.wait("@getDetalle");
   });
 
@@ -113,6 +133,123 @@ describe("HU-01 | CP-08 (CA0108) – Resumen y selector del presupuesto activo",
   it("muestra la lista de categorías del presupuesto seleccionado", () => {
     cy.get(".pres-cat-list, .pres-cat-item, [class*=cat-item]", { timeout: 8000 })
       .should("have.length.gte", 1);
+  });
+});
+
+// CP-01 (CA0101) – Visualización de resumen en página principal
+describe("HU-01 | CP-01 (CA0101) – Resumen en página principal", () => {
+  beforeEach(() => {
+    interceptNormalFlow();
+    cy.visit("/"); // Vista 'Inicio'
+  });
+
+  it("muestra el componente PresupuestoInfoCard con los datos del presupuesto en curso", () => {
+    cy.wait("@getMultiplePresupuestos");
+    cy.get(".info-card").contains("Mayo 2026").should("be.visible");
+    cy.get(".info-card").contains("$1,400.00").should("be.visible");
+    cy.get(".info-card").contains("$5,000.00").should("be.visible");
+  });
+});
+
+// CP-02 (CA0102) – Desglose detallado y barras de progreso
+describe("HU-01 | CP-02 (CA0102) – Desglose detallado y progreso", () => {
+  beforeEach(() => {
+    interceptNormalFlow();
+    navigateToPresupuestos();
+    cy.wait("@getMultiplePresupuestos");
+    cy.wait("@getDetalle");
+  });
+
+  it("renderiza correctamente las categorías con barras de progreso", () => {
+    cy.get(".pres-cat-item").should("have.length.gte", 2);
+    cy.get(".pres-cat-item__bar-fill").should("have.length.gte", 1);
+  });
+});
+
+// CP-06 (CA0106) – Historial de presupuestos pasados
+describe("HU-01 | CP-06 (CA0106) – Historial de pasados", () => {
+  beforeEach(() => {
+    interceptNormalFlow();
+    navigateToPresupuestos();
+    cy.wait("@getMultiplePresupuestos");
+  });
+
+  it("muestra los presupuestos de meses pasados en la sección inferior", () => {
+    cy.contains("Historial reciente").should("be.visible");
+    cy.get(".pres-cat-list-card button").contains("Mes pasado 0").should("exist");
+  });
+});
+
+// CP-03, 04, 05, 14 – Sugerencias (IA / Reglas) en Inicio
+describe("HU-01 | IA y Reglas (CA0103, CA0104, CA0105, CA0114)", () => {
+  beforeEach(() => {
+    interceptNormalFlow();
+    cy.intercept("POST", `${API_URL}/api/ia/agentic`, (req) => {
+      req.reply({
+        body: `{"message":{"content":"{\\"sugerencias\\":[{\\"titulo\\":\\"Prueba IA 1\\",\\"detalle\\":\\"Detalle 1\\",\\"tipo\\":\\"ahorro\\"}]}"}}`
+      })
+    }).as("getIA");
+    cy.visit("/");
+    cy.wait("@getMultiplePresupuestos");
+    cy.wait("@getTransactions");
+  });
+
+  it("CP-14 (CA0114): fallback a reglas por defecto antes de generar con IA", () => {
+    cy.get(".sugerencias-card").should("be.visible");
+    cy.get(".sugerencias-ia-btn").contains("Generar con IA").should("be.visible");
+    // Por nuestras reglas (racha 7 días = false by default on transactions fixture), veremos otras
+    cy.get(".sugerencias-lista .sugerencia-item").should("have.length.gte", 1);
+  });
+
+  it("CP-14 (CA0114) / CP-03 (CA0103): Generar IA presiona el botón y muestra badge", () => {
+    // Simulamos presionar el botón de Ollama
+    cy.get(".sugerencias-ia-btn").click();
+    cy.wait("@getIA");
+    cy.contains("Generadas con IA").should("be.visible");
+    // Verifica que agarró la data
+    cy.contains("Prueba IA 1").should("be.visible");
+  });
+
+  it("CP-04 (CA0104): Mostrar alerta de exceso (> 80%)", () => {
+    // Modificamos el fixture para forzar exceso: ejecutado = 4500 (90%)
+    const excesoTx = [...PRESUPUESTO_FIXTURE.transacciones, { id: "t5", date: "2026-05-15", description: "iPhone", category: "Varios", type: "egreso", amount: 4000 }];
+    cy.intercept("GET", `${API_URL}/api/transactions*`, { body: { data: excesoTx } }).as("getBigTx");
+    cy.visit("/");
+    cy.wait("@getBigTx");
+    cy.get(".sugerencias-card").contains("Posible exceso de presupuesto", { matchCase: false }).should("exist");
+  });
+
+  it("CP-05 (CA0105): Mostrar mensaje racha 7 días (gastos < límite diario)", () => {
+    // Retrasar Egresos para estar vacío (gastos =0 en últimos 7 días)
+    cy.intercept("GET", `${API_URL}/api/transactions*`, { body: { data: [] } }).as("getEmptyTx");
+    cy.visit("/");
+    cy.wait("@getEmptyTx");
+    cy.get(".sugerencias-card").contains("¡Felicidades por tu racha!", { matchCase: false }).should("exist");
+  });
+});
+
+// CP-07 (CA0107) – Actualización en tiempo real
+describe("HU-01 | CP-07 (CA0107) – Actualización en tiempo real", () => {
+  beforeEach(() => {
+    interceptNormalFlow();
+    navigateToPresupuestos();
+    cy.wait("@getMultiplePresupuestos");
+  });
+
+  it("el dashboard se recalcula al recibir nuevos egresos por red (simulado)", () => {
+    // Verificar monto inicial
+    cy.get(".pres-summary-cards").contains("$1,400.00").should("exist");
+
+    // Interceptamos una nueva respuesta post "simulación de sse" con una transacción extra de $50
+    const extraTx = { id: "t99", date: "2026-05-18", description: "Oxxo", category: "Comida", type: "egreso", amount: 50 };
+    const newDetalle = { ...PRESUPUESTO_FIXTURE, total_ejecutado: 1450, transacciones: [...PRESUPUESTO_FIXTURE.transacciones, extraTx] };
+    // Refrescamos endpoint u obsevamos recambio
+    cy.intercept("GET", `${API_URL}/api/presupuestos/${PRESUPUESTO_FIXTURE.id_presupuesto}`, { body: newDetalle }).as("getDetalleActualizado");
+    // Al recargar / gatillar re-fetch (navegando a inicio y de vuelta)
+    cy.visit("/");
+    cy.get(".header-nav span").contains("Presupuestos").click();
+    cy.wait("@getDetalleActualizado");
+    cy.get(".pres-summary-cards").contains("$1,450.00").should("exist");
   });
 });
 
@@ -145,7 +282,7 @@ describe("HU-01 | CP-11 (CA0111) – Detalle de categoría (clic + teclado)", ()
   beforeEach(() => {
     interceptNormalFlow();
     navigateToPresupuestos();
-    cy.wait("@getPresupuestos");
+    cy.wait("@getMultiplePresupuestos");
     cy.wait("@getDetalle");
   });
 
@@ -173,7 +310,7 @@ describe("HU-01 | CP-12 (CA0112) – Balance y porcentaje en UI", () => {
   beforeEach(() => {
     interceptNormalFlow();
     navigateToPresupuestos();
-    cy.wait("@getPresupuestos");
+    cy.wait("@getMultiplePresupuestos");
     cy.wait("@getDetalle");
   });
 
@@ -183,7 +320,7 @@ describe("HU-01 | CP-12 (CA0112) – Balance y porcentaje en UI", () => {
   });
 
   it("las tarjetas de resumen contienen valores numéricos positivos", () => {
-    cy.get(".pres-summary-cards .pres-stat-value, .pres-stat-value", { timeout: 8000 })
+    cy.get(".pres-summary-cards .pres-summary-card__value", { timeout: 8000 })
       .should("have.length.gte", 1);
   });
 });
