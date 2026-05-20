@@ -44,22 +44,31 @@ export default function CategoryList({ catStats, onCategoryClick, onManageClick 
             {/* nombre y barra */}
             <div className="pres-cat-item__info">
               <span className="pres-cat-item__name">{cat.nombre_categ || cat.nombre}</span>
-              <div className="pres-cat-item__bar-row">
-                <div className="pres-cat-item__bar-track">
-                  <div
-                    className={`pres-cat-item__bar-fill ${cat.barClass}`}
-                    style={{ width: `${cat.progress}%` }}
-                  />
-                </div>
-                <span className="pres-cat-item__pct">{cat.progress}%</span>
-              </div>
-              <div style={{ fontSize: 10, color: "#a2a9ad", marginTop: 2 }}>
-                de {fmt(cat.monto_limite || cat.monto_asignado || 0)}
-              </div>
+              {!cat.isIncome && (
+                <>
+                  <div className="pres-cat-item__bar-row">
+                    <div className="pres-cat-item__bar-track">
+                      <div
+                        className={`pres-cat-item__bar-fill ${cat.barClass}`}
+                        style={{ width: `${cat.progress}%` }}
+                      />
+                    </div>
+                    <span className="pres-cat-item__pct">{cat.progress}%</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: "#a2a9ad", marginTop: 2 }}>
+                    de {fmt(cat.monto_limite || cat.monto_asignado || 0)}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Executed amount */}
-            <span className="pres-cat-item__amount">{fmt(cat.executed)}</span>
+            <span 
+              className="pres-cat-item__amount" 
+              style={cat.isIncome ? { color: "var(--banorte-success)" } : {}}
+            >
+              {fmt(cat.executed)}
+            </span>
 
             <ChevronRight size={16} className="pres-cat-item__arrow" />
           </div>
