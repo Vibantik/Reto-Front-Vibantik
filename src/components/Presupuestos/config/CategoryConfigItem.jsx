@@ -3,7 +3,7 @@
 
 import { GripVertical, Trash2 } from "lucide-react";
 import { ICON_MAP } from "../presupuestos.data.js";
-import { fmt } from "../utils/presupuestos.utils.js";
+import { normalizeText, fmt } from "../utils/presupuestos.utils.js";
 
 
 export default function CategoryConfigItem({
@@ -18,6 +18,7 @@ export default function CategoryConfigItem({
 }) {
   const Icon = ICON_MAP[cat.icon] || ICON_MAP["zap"];
   const catKey = cat.id_categ ?? cat.uid;
+  const isIncome = normalizeText(cat.nombre_categ) === "ingresos" || normalizeText(cat.nombre_categ) === "ingreso";
 
   return (
     <div
@@ -33,9 +34,9 @@ export default function CategoryConfigItem({
       <button
         id={`pres-icon-btn-${catKey}`}
         className="pres-config-item__icon-btn"
-        style={{ background: cat.color }}
-        title="Cambiar icono"
-        onClick={() => onIconClick(cat.uid)}
+        style={{ background: cat.color, cursor: isIncome ? "default" : "pointer" }}
+        title={isIncome ? "Categoría fija" : "Cambiar icono"}
+        onClick={() => !isIncome && onIconClick(cat.uid)}
       >
         <Icon size={20} />
       </button>
@@ -47,21 +48,30 @@ export default function CategoryConfigItem({
           className="pres-config-item__name-input"
           value={cat.nombre_categ}
           placeholder="Nombre de categoría"
+          disabled={isIncome}
           onChange={(e) => onUpdate(cat.uid, "nombre_categ", e.target.value)}
         />
         <div className="pres-config-item__budget-row">
           <span>$</span>
-          <input
-            id={`pres-cat-budget-${catKey}`}
-            className="pres-config-item__budget-input"
-            type="number"
-            min={0}
-            value={cat.monto_asignado}
-            onChange={(e) => onUpdate(cat.uid, "monto_asignado", Number(e.target.value))}
-          />
-          <span style={{ marginLeft: "auto", color: "#a2a9ad" }}>
-            /{cat.monto_asignado > 0 ? fmt(cat.monto_asignado) : "sin límite"}
-          </span>
+          {isIncome ? (
+            <span style={{ color: "var(--banorte-success)", fontWeight: 600 }}>
+              Auto-calculado
+            </span>
+          ) : (
+            <>
+              <input
+                id={`pres-cat-budget-${catKey}`}
+                className="pres-config-item__budget-input"
+                type="number"
+                min={0}
+                value={cat.monto_asignado}
+                onChange={(e) => onUpdate(cat.uid, "monto_asignado", Number(e.target.value))}
+              />
+              <span style={{ marginLeft: "auto", color: "#a2a9ad" }}>
+                /{cat.monto_asignado > 0 ? fmt(cat.monto_asignado) : "sin límite"}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -98,14 +108,18 @@ export default function CategoryConfigItem({
       </div>
 
       {/* Delete */}
-      <button
-        id={`pres-cat-delete-${catKey}`}
-        className="pres-config-item__delete-btn"
-        title="Eliminar categoría"
-        onClick={() => onDelete(cat.uid)}
-      >
-        <Trash2 size={18} />
-      </button>
+      {isIncome ? (
+        <div style={{ width: 36, height: 36 }} />
+      ) : (
+        <button
+          id={`pres-cat-delete-${catKey}`}
+          className="pres-config-item__delete-btn"
+          title="Eliminar categoría"
+          onClick={() => onDelete(cat.uid)}
+        >
+          <Trash2 size={18} />
+        </button>
+      )}
     </div>
   );
 }
