@@ -5,7 +5,7 @@ import {
   fetchPresupuesto,
   createPresupuesto,
 } from "../../services/presupuestosService";
-import { getUserUuid } from "../../utils/userUuid";
+
 import "./presupuestos.css";
 
 import HubView            from "./VistaPrincipal/HubView.jsx";
@@ -21,7 +21,7 @@ function isValidIsoDate(value) {
 }
 
 
-export default function PresupuestosPanel() {
+export default function PresupuestosPanel({ uuid }) {
   const [categorias, setCategorias]         = useState([]);
   const [presupuestos, setPresupuestos]     = useState([]);
   const [selectedPresId, setSelectedPresId] = useState(null);
@@ -39,7 +39,7 @@ export default function PresupuestosPanel() {
     fin: "",
   });
 
-  const uuid = getUserUuid();
+
 
   //datos iniciales
   const loadData = useCallback(async () => {
@@ -74,7 +74,7 @@ export default function PresupuestosPanel() {
     }
   }, [uuid, selectedPresId]);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   // detalle presupuesto 
   useEffect(() => {

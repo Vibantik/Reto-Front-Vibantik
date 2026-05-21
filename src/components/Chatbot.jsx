@@ -2,7 +2,7 @@ import { useChatbot } from "./chatbotElements/useChatbot";
 import { X, Send } from "lucide-react";
 import PromptContainer from "./chatbotElements/PromptContainer";
 
-export default function Chatbot({ open, onClose }) {
+export default function Chatbot({ open, onClose, uuid }) {
   const { messages,
     input,
     setInput,
@@ -11,7 +11,7 @@ export default function Chatbot({ open, onClose }) {
     messagesEndRef,
     sendMessage,
     handleKeyDown,
-  } = useChatbot();
+  } = useChatbot(uuid);
 
   if (!open) return null;
 

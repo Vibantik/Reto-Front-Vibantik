@@ -12,9 +12,11 @@ import Sidebar from "./components/Sidebar";
 import SugerenciasCard from "./components/SugerenciasCard";
 import { fetchInversiones } from "./services/inversionesService";
 import ReportesPanel from "./components/ReportesPanel";
+import UserPicker from "./components/UserPicker";
+import { getSession, setSession, clearSession } from "./utils/session";
 
 import "./App.css";
- 
+
 function InversionInfoCard() {
   const [resumen, setResumen] = useState(null);
  
@@ -59,19 +61,41 @@ function InversionInfoCard() {
     </div>
   );
 }
- 
+
 export default function App() {
-  const [chatOpen, setChatOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Inicio");
+  const [uuid, setUuid]         = useState(() => getSession());
+  const [activeUser, setActiveUser] = useState(null);
+
+  const [chatOpen, setChatOpen]     = useState(false);
+  const [activeTab, setActiveTab]   = useState("Inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
- 
+
+  const handleSelectUser = (selectedUuid, userObj) => {
+    setSession(selectedUuid);
+    setUuid(selectedUuid);
+    setActiveUser(userObj);
+  };
+
+  const handleSignOut = () => {
+    clearSession();
+    setUuid(null);
+    setActiveUser(null);
+    setChatOpen(false);
+    setSidebarOpen(false);
+    setActiveTab("Inicio");
+  };
+
+  if (!uuid) {
+    return <UserPicker onSelect={handleSelectUser} />;
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case "Inicio":
         return (
           <main className="dashboard">
             <div className="dashboard-row">
-              <ExpensesChart />
+              <ExpensesChart uuid={uuid} />
               <SugerenciasCard />
             </div>
             <div className="dashboard-row">
@@ -100,7 +124,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <PresupuestosPanel />
+              <PresupuestosPanel uuid={uuid} />
             </div>
           </main>
         );
@@ -108,18 +132,18 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <MetasPanel />
+              <MetasPanel uuid={uuid} />
             </div>
           </main>
         );
-        case "Reportes":
-  return (
-    <main className="dashboard">
-      <div className="dashboard-row transactions-row">
-        <ReportesPanel />
-      </div>
-    </main>
-  );
+      case "Reportes":
+        return (
+          <main className="dashboard">
+            <div className="dashboard-row transactions-row">
+              <ReportesPanel />
+            </div>
+          </main>
+        );
       default:
         return (
           <main className="dashboard">
@@ -131,18 +155,23 @@ export default function App() {
         );
     }
   };
- 
+
   return (
     <div className="app">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        activeUser={activeUser}
+      />
+      <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
       {renderContent()}
       {!chatOpen && (
         <button className="fab" onClick={() => setChatOpen(true)}>
           <MessageCircle size={28} />
         </button>
       )}
-      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} />
+      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} uuid={uuid} />
     </div>
   );
 }

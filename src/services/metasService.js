@@ -29,7 +29,7 @@ const getBackendErrorMessage = async (response) => {
   }
 };
 
-export const fetchMetas = async (uuid = "dbf9f839-b57e-415f-8b5b-9213524ed827") => {
+export const fetchMetas = async (uuid) => {
   const query = new URLSearchParams();
   if (uuid) query.set("uuid_de_usuario", uuid);
 

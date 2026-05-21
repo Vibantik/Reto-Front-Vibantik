@@ -14,7 +14,7 @@ import {
   fetchPresupuestos,
   fetchPresupuesto,
 } from "../services/presupuestosService";
-import { getUserUuid } from "../utils/userUuid";
+
 
 const DEFAULT_COLOR = "#9ca3af";
 
@@ -86,13 +86,13 @@ function ActiveShape(props) {
   );
 }
  
-export default function ExpensesChart() {
+export default function ExpensesChart({ uuid }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [data, setData] = useState([]);
   const [totalEgresos, setTotalEgresos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alertas, setAlertas] = useState([]);
-  const uuid = getUserUuid();
+
  
   useEffect(() => {
     const load = async () => {
