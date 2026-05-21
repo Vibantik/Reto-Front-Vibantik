@@ -13,7 +13,7 @@ import SugerenciasCard from "./components/SugerenciasCard";
 import { fetchInversiones } from "./services/inversionesService";
 import ReportesPanel from "./components/ReportesPanel";
 import UserPicker from "./components/UserPicker";
-import { getSession, setSession, clearSession } from "./utils/session";
+import { getSession, setSession, clearSession, getActiveUser } from "./utils/session";
 
 import "./App.css";
 
@@ -64,14 +64,14 @@ function InversionInfoCard() {
 
 export default function App() {
   const [uuid, setUuid]         = useState(() => getSession());
-  const [activeUser, setActiveUser] = useState(null);
+  const [activeUser, setActiveUser] = useState(() => getActiveUser());
 
   const [chatOpen, setChatOpen]     = useState(false);
   const [activeTab, setActiveTab]   = useState("Inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSelectUser = (selectedUuid, userObj) => {
-    setSession(selectedUuid);
+    setSession(selectedUuid, userObj);
     setUuid(selectedUuid);
     setActiveUser(userObj);
   };

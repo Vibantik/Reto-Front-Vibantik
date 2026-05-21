@@ -31,7 +31,7 @@ export default function Header({ activeTab, onTabChange, toggleSidebar, activeUs
             className="header-avatar"
             onClick={toggleSidebar}
             style={{ cursor: "pointer" }}
-            title={activeUser ? `${activeUser.nombre} ${activeUser.apellido} · Configuración` : "Configuración"}
+            title={activeUser ? `${activeUser.nombre} ${activeUser.apellido} - Configuración` : "Configuración"}
           >
             {getInitials(activeUser)}
           </div>
