@@ -17,11 +17,12 @@ import { getSession, setSession, clearSession, getActiveUser } from "./utils/ses
 
 import "./App.css";
 
-function InversionInfoCard() {
+function InversionInfoCard({ uuid }) {
   const [resumen, setResumen] = useState(null);
  
   useEffect(() => {
-    fetchInversiones()
+    if (!uuid) return;
+    fetchInversiones(uuid)
       .then((data) => {
         const hoy = new Date();
         const activas = data.filter((i) => new Date(i.fecha_fin) > hoy);
@@ -32,7 +33,7 @@ function InversionInfoCard() {
         setResumen({ total, numActivas: activas.length, porVencer });
       })
       .catch(() => setResumen(null));
-  }, []);
+  }, [uuid]);
  
   const fmt = (n) =>
     Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
@@ -96,11 +97,11 @@ export default function App() {
           <main className="dashboard">
             <div className="dashboard-row">
               <ExpensesChart uuid={uuid} />
-              <SugerenciasCard />
+              <SugerenciasCard uuid={uuid} />
             </div>
             <div className="dashboard-row">
-              <StocksPanel />
-              <InversionInfoCard />
+              <StocksPanel uuid={uuid} />
+              <InversionInfoCard uuid={uuid} />
             </div>
           </main>
         );
@@ -116,7 +117,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <InversionesPanel />
+              <InversionesPanel uuid={uuid} />
             </div>
           </main>
         );

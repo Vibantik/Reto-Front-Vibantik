@@ -70,7 +70,7 @@ const TIPO = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SugerenciasCard() {
+export default function SugerenciasCard({ uuid }) {
   const [sugerencias, setSugerencias] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [iaActiva,    setIaActiva]    = useState(false);
@@ -80,14 +80,15 @@ export default function SugerenciasCard() {
 
   // Carga inicial con reglas
   useEffect(() => {
+    if (!uuid) return;
     const ahora = new Date();
     const mes   = String(ahora.getMonth()+1).padStart(2,"0");
     const ini   = `${ahora.getFullYear()}-${mes}-01`;
     const hoy   = ahora.toISOString().slice(0,10);
-
+ 
     Promise.all([
       fetchTransactions({ page:1, limit:200, type:"egreso", startDate:ini, endDate:hoy }),
-      fetchInversiones().catch(() => []),
+      fetchInversiones(uuid).catch(() => []),
     ]).then(([txRes, inv]) => {
       const txs  = txRes.data ?? [];
       const porCat = {};
@@ -107,7 +108,7 @@ export default function SugerenciasCard() {
       setResumen(r);
       setSugerencias(reglas(r));
     }).catch(() => setSugerencias([])).finally(() => setLoading(false));
-  }, []);
+  }, [uuid]);
 
   const handleIA = async () => {
     if (!resumen || loading) return;
@@ -188,7 +189,7 @@ export default function SugerenciasCard() {
         </button>
       </div>
 
-      {wrapped && <AuraWrapped onClose={() => setWrapped(false)}/>}
+      {wrapped && <AuraWrapped uuid={uuid} onClose={() => setWrapped(false)}/>}
     </>
   );
 }
