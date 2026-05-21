@@ -66,6 +66,10 @@ function InversionInfoCard({ uuid }) {
 export default function App() {
   const [uuid, setUuid]         = useState(() => getSession());
   const [activeUser, setActiveUser] = useState(() => getActiveUser());
+  const [showPicker, setShowPicker] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("picker") || params.has("userpicker") || window.location.hash === "#userpicker";
+  });
 
   const [chatOpen, setChatOpen]     = useState(false);
   const [activeTab, setActiveTab]   = useState("Inicio");
@@ -75,6 +79,19 @@ export default function App() {
     setSession(selectedUuid, userObj);
     setUuid(selectedUuid);
     setActiveUser(userObj);
+    setShowPicker(false);
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("picker");
+      url.searchParams.delete("userpicker");
+      if (url.hash === "#userpicker") {
+        url.hash = "";
+      }
+      window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleSignOut = () => {
@@ -84,9 +101,10 @@ export default function App() {
     setChatOpen(false);
     setSidebarOpen(false);
     setActiveTab("Inicio");
+    setShowPicker(true);
   };
 
-  if (!uuid) {
+  if (showPicker || !uuid) {
     return <UserPicker onSelect={handleSelectUser} />;
   }
 
