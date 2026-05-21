@@ -120,7 +120,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([PLAZO_1, PLAZO_2]);
       irAInversiones();
-      cy.wait("@getInversionesUser");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-02 · muestra ambas inversiones a plazo", () => {
