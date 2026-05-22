@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { sanitize } from "./sanitizer";
-import { getUserUuid } from "../../utils/userUuid";
 
 const INITIAL_MESSAGES = [
   {
@@ -10,7 +9,7 @@ const INITIAL_MESSAGES = [
   },
 ];
 
-export function useChatbot() {
+export function useChatbot(uuid) {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +24,12 @@ export function useChatbot() {
   }, []);
 
   useEffect(() => {
-    const uuid_de_usuario = getUserUuid();
+    if (!uuid) return;
+    setMessages(INITIAL_MESSAGES);
+    setInput("");
+    setStreamingText("");
+
+    const uuid_de_usuario = uuid;
 
     const initConversation = async () => {
       try {
@@ -44,7 +48,7 @@ export function useChatbot() {
     };
 
     initConversation();
-  }, []);
+  }, [uuid]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

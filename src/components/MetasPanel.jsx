@@ -60,8 +60,7 @@ const categorizeMetas = (metas, todayInput) => {
   return buckets;
 };
 
-function MetasPanel() {
-  const userUuid = getUserUuid();
+function MetasPanel({ uuid }) {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -94,7 +93,7 @@ function MetasPanel() {
       setError(null);
       setActionError(null);
       try {
-        const data = await fetchMetas(userUuid);
+        const data = await fetchMetas(uuid);
         setMetas(data);
       } catch (err) {
         setError("No se pudieron cargar las metas.");
@@ -105,7 +104,7 @@ function MetasPanel() {
     };
 
     load();
-  }, [userUuid]);
+  }, [uuid]);
 
   const totalObjetivo = useMemo(
     () => metas.reduce((sum, meta) => sum + Number(meta.monto || 0), 0),
@@ -194,7 +193,7 @@ function MetasPanel() {
     setDeletingId(metaId);
     setActionError(null);
     try {
-      await deleteMeta({ idMeta: metaId, uuid: userUuid });
+      await deleteMeta({ idMeta: metaId, uuid: uuid });
       setMetas((prev) => prev.filter((meta) => meta.id !== metaId));
       if (editingMetaId === metaId) closeModal();
     } catch (err) {
@@ -235,7 +234,7 @@ function MetasPanel() {
         try {
           const updatedMeta = await updateMeta({
             idMeta: editingMetaId,
-            uuid: userUuid,
+            uuid: uuid,
             nombreMeta: formData.nombreMeta.trim(),
             monto: Number(formData.monto),
             fechaInicio: formData.fechaInicio,
@@ -265,7 +264,7 @@ function MetasPanel() {
 
       try {
         const createdMeta = await createMeta({
-          uuid: userUuid,
+          uuid: uuid,
           nombreMeta: formData.nombreMeta.trim(),
           monto: Number(formData.monto),
           fechaInicio: formData.fechaInicio,

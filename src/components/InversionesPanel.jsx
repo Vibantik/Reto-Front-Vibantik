@@ -5,17 +5,18 @@ import InversionCard from "./InversionCard";
 import FondoCard from "./FondoCard";
 import "./css/inversiones.css";
 
-function InversionesPanel() {
+function InversionesPanel({ uuid }) {
   const [inversiones, setInversiones] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!uuid) return;
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchInversiones();
+        const data = await fetchInversiones(uuid);
         setInversiones(data);
       } catch (err) {
         setError("No se pudieron cargar las inversiones.");
@@ -25,7 +26,7 @@ function InversionesPanel() {
       }
     };
     load();
-  }, []);
+  }, [uuid]);
 
   const esFondo = (inv) => inv.tipo?.toLowerCase() == "fondo de inversión";
 

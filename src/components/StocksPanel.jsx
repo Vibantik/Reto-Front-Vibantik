@@ -65,17 +65,19 @@ function CustomTooltip({ active, payload, label, inversiones }) {
   );
 }
  
-export default function StocksPanel() {
+export default function StocksPanel({ uuid }) {
   const [inversiones, setInversiones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [highlighted, setHighlighted] = useState(null);
  
   useEffect(() => {
-    fetchInversiones()
+    if (!uuid) return;
+    setLoading(true);
+    fetchInversiones(uuid)
       .then(data => setInversiones(data.slice(0, 6))) // máx 6 para colores
       .catch(() => setInversiones([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [uuid]);
  
   const chartData = buildChartData(inversiones);
 

@@ -3,7 +3,7 @@ import { X, Send } from "lucide-react";
 import PromptContainer from "./chatbotElements/PromptContainer";
 import ChatBubble from "./chatbotElements/ChatBubble";
 
-export default function Chatbot({ open, onClose }) {
+export default function Chatbot({ open, onClose, uuid }) {
   const { messages,
     input,
     setInput,
@@ -13,7 +13,7 @@ export default function Chatbot({ open, onClose }) {
     sendMessage,
     handleKeyDown,
     appendMessage,
-  } = useChatbot();
+  } = useChatbot(uuid);
 
   if (!open) return null;
 

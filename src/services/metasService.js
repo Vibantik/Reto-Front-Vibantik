@@ -31,7 +31,7 @@ const getBackendErrorMessage = async (response) => {
   }
 };
 
-export const fetchMetas = async (uuid = getUserUuid()) => {
+export const fetchMetas = async (uuid) => {
   const query = new URLSearchParams();
   if (uuid) query.set("uuid_de_usuario", uuid);
 

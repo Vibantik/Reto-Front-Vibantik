@@ -174,7 +174,8 @@ const TIPO = {
   alerta: { color: "#EB0029", bg: "#fff5f5", Icon: AlertCircle },
 };
 
-export default function SugerenciasCard() {
+// ─────────────────────────────────────────────────────────────────────────────
+export default function SugerenciasCard({ uuid }) {
   const [sugerencias, setSugerencias] = useState([]);
   const [fallbackSuggestions, setFallbackSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +183,6 @@ export default function SugerenciasCard() {
   const [errorIA, setErrorIA] = useState(false);
   const [resumen, setResumen] = useState(null);
   const [wrapped, setWrapped] = useState(false);
-  const uuid = getUserUuid();
 
   const loadBaseSuggestions = useCallback(async () => {
     const ahora = new Date();
@@ -194,7 +194,7 @@ export default function SugerenciasCard() {
     try {
       const [txRes, inv, presupuestos] = await Promise.all([
         fetchTransactions({ page: 1, limit: 400, startDate: ini, endDate: hoy }),
-        fetchInversiones().catch(() => []),
+        fetchInversiones(uuid).catch(() => []),
         fetchPresupuestos(uuid).catch(() => []),
       ]);
 
@@ -389,7 +389,7 @@ export default function SugerenciasCard() {
         </button>
       </div>
 
-      {wrapped && <AuraWrapped onClose={() => setWrapped(false)} />}
+      {wrapped && <AuraWrapped uuid={uuid} onClose={() => setWrapped(false)}/>}
     </>
   );
 }

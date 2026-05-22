@@ -48,7 +48,7 @@ function ActiveShape(props) {
   );
 }
  
-export default function ExpensesChart() {
+export default function ExpensesChart({ uuid }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [data, setData] = useState([]);
   const [totalEgresos, setTotalEgresos] = useState(0);
@@ -57,7 +57,6 @@ export default function ExpensesChart() {
   const [budgetOverview, setBudgetOverview] = useState(null);
   const [riskAlert, setRiskAlert] = useState(null);
   const [streakMessage, setStreakMessage] = useState(null);
-  const uuid = getUserUuid();
  
   useEffect(() => {
     let cancelled = false;
