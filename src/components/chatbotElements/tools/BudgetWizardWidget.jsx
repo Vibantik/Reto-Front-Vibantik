@@ -279,7 +279,7 @@ export default function BudgetWizardWidget({ data, onComplete }) {
         />
       </label>
 
-      <div className="budget-wizard-grid">
+      <div>
         <label className="budget-wizard-field">
           <span>Inicio</span>
           <input
@@ -289,7 +289,9 @@ export default function BudgetWizardWidget({ data, onComplete }) {
             onChange={handleChange}
           />
         </label>
+      </div>
 
+      <div>
         <label className="budget-wizard-field">
           <span>Fin</span>
           <input
