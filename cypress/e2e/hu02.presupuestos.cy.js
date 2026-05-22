@@ -96,14 +96,6 @@ describe("HU-02 | CP-10 (CA0212) – Alta de presupuesto desde modal", () => {
       body: createdPresupuesto,
     }).as("createPresupuesto");
 
-    cy.intercept("GET", `${API_URL}/api/presupuestos?uuid=${TEST_UUID}`, {
-      body: [createdPresupuesto],
-    }).as("getPresupuestosActualizados");
-
-    cy.intercept("GET", `${API_URL}/api/presupuestos/${createdPresupuesto.id_presupuesto}`, {
-      body: createdPresupuesto,
-    }).as("getDetalleNuevo");
-
     navigateToPresupuestos();
     cy.wait("@getPresupuestos");
   });
@@ -115,6 +107,17 @@ describe("HU-02 | CP-10 (CA0212) – Alta de presupuesto desde modal", () => {
   });
 
   it("crea el presupuesto con datos válidos y recarga la lista", () => {
+    const createdPresupuesto = { ...PRESUPUESTO_BASE, id_presupuesto: 99, nombre: "Presupuesto Junio 2026" };
+    
+    // Interceptar la recarga con el nuevo dato SOLO despues del init
+    cy.intercept("GET", `${API_URL}/api/presupuestos?uuid=${TEST_UUID}`, {
+      body: [createdPresupuesto],
+    }).as("getPresupuestosActualizados");
+
+    cy.intercept("GET", `${API_URL}/api/presupuestos/${createdPresupuesto.id_presupuesto}`, {
+      body: createdPresupuesto,
+    }).as("getDetalleNuevo");
+
     openCreateModal();
 
     // Limpiar y rellenar formulario
@@ -299,14 +302,15 @@ describe("HU-02 | CP-08 (CA0209/CA0210) – Eliminación de presupuesto", () => 
       .first()
       .click();
 
-    // Si hay window.confirm, Cypress ya lo aceptó.
     // Si hay un modal de confirmación propio, buscarlo y confirmarlo.
-    cy.get("button:contains('Confirmar'), button:contains('Sí'), button:contains('Aceptar')", {
-      timeout: 3000,
-    })
-      .then(($btn) => {
-        if ($btn.length) $btn.first().click();
-      });
+    cy.get("body").then(($body) => {
+      const confirmBtns = $body.find("button:contains('Confirmar'), button:contains('Sí'), button:contains('Aceptar')");
+      if (confirmBtns.length > 0) {
+        cy.wrap(confirmBtns.first()).click();
+      }
+    });
+
+    cy.wait("@deletePresupuesto");
   });
 });
 

@@ -7,6 +7,7 @@ import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import InversionesPanel from "./components/InversionesPanel";
 import PresupuestosPanel from "./components/Presupuestos/PresupuestosPanel";
+import PresupuestoInfoCard from "./components/PresupuestoInfoCard";
 import MetasPanel from "./components/MetasPanel";
 import Sidebar from "./components/Sidebar";
 import SugerenciasCard from "./components/SugerenciasCard";
@@ -77,6 +78,9 @@ export default function App() {
             <div className="dashboard-row">
               <StocksPanel />
               <InversionInfoCard />
+            </div>
+            <div className="dashboard-row">
+              <PresupuestoInfoCard onViewDetails={() => setActiveTab("Presupuestos")} />
             </div>
           </main>
         );

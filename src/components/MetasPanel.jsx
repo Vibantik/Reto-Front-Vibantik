@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Flag, Target } from "lucide-react";
 import { createMeta, deleteMeta, fetchMetas, updateMeta } from "../services/metasService";
+import { getUserUuid } from "../utils/userUuid";
 import "./css/metas.css";
 
-const USER_UUID = "dbf9f839-b57e-415f-8b5b-9213524ed827";
 const ITEMS_PER_PAGE = 10;
 const SECTION_DEFINITIONS = [
   { key: "enCurso", title: "Objetivos activos" },
@@ -61,6 +61,7 @@ const categorizeMetas = (metas, todayInput) => {
 };
 
 function MetasPanel() {
+  const userUuid = getUserUuid();
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -93,7 +94,7 @@ function MetasPanel() {
       setError(null);
       setActionError(null);
       try {
-        const data = await fetchMetas(USER_UUID);
+        const data = await fetchMetas(userUuid);
         setMetas(data);
       } catch (err) {
         setError("No se pudieron cargar las metas.");
@@ -104,7 +105,7 @@ function MetasPanel() {
     };
 
     load();
-  }, []);
+  }, [userUuid]);
 
   const totalObjetivo = useMemo(
     () => metas.reduce((sum, meta) => sum + Number(meta.monto || 0), 0),
@@ -193,7 +194,7 @@ function MetasPanel() {
     setDeletingId(metaId);
     setActionError(null);
     try {
-      await deleteMeta({ idMeta: metaId, uuid: USER_UUID });
+      await deleteMeta({ idMeta: metaId, uuid: userUuid });
       setMetas((prev) => prev.filter((meta) => meta.id !== metaId));
       if (editingMetaId === metaId) closeModal();
     } catch (err) {
@@ -234,7 +235,7 @@ function MetasPanel() {
         try {
           const updatedMeta = await updateMeta({
             idMeta: editingMetaId,
-            uuid: USER_UUID,
+            uuid: userUuid,
             nombreMeta: formData.nombreMeta.trim(),
             monto: Number(formData.monto),
             fechaInicio: formData.fechaInicio,
@@ -264,7 +265,7 @@ function MetasPanel() {
 
       try {
         const createdMeta = await createMeta({
-          uuid: USER_UUID,
+          uuid: userUuid,
           nombreMeta: formData.nombreMeta.trim(),
           monto: Number(formData.monto),
           fechaInicio: formData.fechaInicio,
