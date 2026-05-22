@@ -7,61 +7,23 @@ import {
   ResponsiveContainer,
   Label,
 } from "recharts";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Sparkles, Trophy } from "lucide-react";
 import { fetchTransactions } from "../services/transactionsService";
 import {
   fetchCategorias,
   fetchPresupuestos,
   fetchPresupuesto,
 } from "../services/presupuestosService";
-
-
-const DEFAULT_COLOR = "#9ca3af";
-
-const normalizeKey = (value) => String(value || "").trim().toLowerCase();
-// TODO : revisar que si este correcto cuando hay multiples presupuestos activos
-const pickActivePresupuesto = (presupuestos = []) => {
-  if (!Array.isArray(presupuestos) || presupuestos.length === 0) return null;
-  const now = new Date();
-  const activos = presupuestos.filter((p) => {
-    const ini = new Date(p.inicio);
-    const fin = p.fin ? new Date(p.fin) : null;
-    return ini <= now && (!fin || fin >= now);
-  });
-  const source = activos.length > 0 ? activos : presupuestos;
-  return [...source].sort((a, b) => new Date(b.inicio) - new Date(a.inicio))[0];
-};
-
-const buildCategoryMeta = (categorias = [], presupuestoCats = []) => {
-  const metaByKey = new Map();
-
-  (categorias || []).forEach((c) => {
-    const key = normalizeKey(c?.nombre_categ);
-    if (!key) return;
-    metaByKey.set(key, {
-      name: c.nombre_categ || "",
-      color: c.color || DEFAULT_COLOR,
-      presupuesto: 0,
-    });
-  });
-
-  (presupuestoCats || []).forEach((c) => {
-    const key = normalizeKey(c?.nombre_categ);
-    if (!key) return;
-    const prev = metaByKey.get(key) || {
-      name: c.nombre_categ || "",
-      color: DEFAULT_COLOR,
-      presupuesto: 0,
-    };
-    metaByKey.set(key, {
-      name: prev.name || c.nombre_categ || "",
-      color: c.color || prev.color || DEFAULT_COLOR,
-      presupuesto: Number(c.monto_asignado || 0),
-    });
-  });
-
-  return metaByKey;
-};
+import { subscribeToTransactionStream } from "../services/transactionsStream";
+import { getUserUuid } from "../utils/userUuid";
+import {
+  normalizeBudgetKey,
+  pickActivePresupuesto,
+  buildCategoryMeta,
+  buildBudgetOverview,
+  buildOverspendAlert,
+  buildSevenDayStreak,
+} from "../utils/budgetInsights";
  
 function ActiveShape(props) {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
@@ -92,11 +54,16 @@ export default function ExpensesChart({ uuid }) {
   const [totalEgresos, setTotalEgresos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alertas, setAlertas] = useState([]);
-
+  const [budgetOverview, setBudgetOverview] = useState(null);
+  const [riskAlert, setRiskAlert] = useState(null);
+  const [streakMessage, setStreakMessage] = useState(null);
  
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       try {
+        setLoading(true);
         // Trae todos los egresos del mes actual (limit alto para tenerlos todos)
         const ahora = new Date();
         const primerDia = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-01`;
@@ -134,7 +101,7 @@ export default function ExpensesChart({ uuid }) {
         const porCategoria = new Map();
         transactions.forEach((t) => {
           const raw = t.category || "Otros";
-          const key = normalizeKey(raw) || "otros";
+          const key = normalizeBudgetKey(raw) || "otros";
           const meta = metaByKey.get(key);
           const displayName = meta?.name || raw || "Otros";
           const prev = porCategoria.get(key);
@@ -146,20 +113,7 @@ export default function ExpensesChart({ uuid }) {
           (s, v) => s + v.value,
           0
         );
-        setTotalEgresos(total);
-
-        const chartData = Array.from(porCategoria.entries())
-          .sort((a, b) => b[1].value - a[1].value)
-          .map(([key, entry]) => ({
-            name: entry.name,
-            value: entry.value,
-            pct: total > 0 ? `${Math.round((entry.value / total) * 100)}%` : "0%",
-            color: metaByKey.get(key)?.color ?? DEFAULT_COLOR,
-          }));
-
-        setData(chartData);
-
-        // * Detecta categorias sobre presupuesto (>80%)
+        const overview = buildBudgetOverview(presupuestoDetalle);
         const sobrePres = [];
         for (const [key, meta] of metaByKey.entries()) {
           const presupuesto = Number(meta.presupuesto || 0);
@@ -169,21 +123,57 @@ export default function ExpensesChart({ uuid }) {
             sobrePres.push(meta.name || key);
           }
         }
+
+        if (cancelled) return;
+
+        setTotalEgresos(total);
+        setBudgetOverview({
+          nombre: activo?.nombre || "Presupuesto activo",
+          ...overview,
+        });
+        setRiskAlert(buildOverspendAlert(presupuestoDetalle?.transacciones || [], overview.totalBudget, ahora));
+        setStreakMessage(buildSevenDayStreak(presupuestoDetalle?.transacciones || [], overview.totalBudget, ahora));
+
+        const chartData = Array.from(porCategoria.entries())
+          .sort((a, b) => b[1].value - a[1].value)
+          .map(([key, entry]) => ({
+            name: entry.name,
+            value: entry.value,
+            pct: total > 0 ? `${Math.round((entry.value / total) * 100)}%` : "0%",
+            color: metaByKey.get(key)?.color ?? "#9ca3af",
+          }));
+
+        setData(chartData);
         setAlertas(sobrePres);
  
       } catch (err) {
         console.error("Error cargando gastos:", err);
         // para no romper UI
-        setData([]);
+        if (!cancelled) {
+          setData([]);
+          setBudgetOverview(null);
+          setRiskAlert(null);
+          setStreakMessage(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+
+    const unsubscribe = subscribeToTransactionStream(() => {
+      load();
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [uuid]);
  
   const onEnter = useCallback((_, index) => setActiveIndex(index), []);
   const onLeave = useCallback(() => setActiveIndex(-1), []);
+  const mesActual = new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" });
  
   if (loading) {
     return (
@@ -195,13 +185,59 @@ export default function ExpensesChart({ uuid }) {
  
   if (data.length === 0) {
     return (
-      <div className="card expenses-card" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 260 }}>
-        <p style={{ color: "#9ca3af", fontSize: 14 }}>Sin egresos registrados este mes.</p>
+      <div className="card expenses-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+          <div>
+            <p style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", margin: 0 }}>Banorte</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a", margin: "2px 0 0" }}>Gastos de {mesActual}</p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>Total egresos</p>
+            <p style={{ fontSize: 17, fontWeight: 800, color: "#EC0029", margin: 0 }}>
+              {Number(totalEgresos).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+            </p>
+          </div>
+        </div>
+
+        {budgetOverview && budgetOverview.totalBudget > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+              gap: "0.75rem",
+              marginBottom: "1rem",
+            }}
+          >
+            <div className="expenses-alert" style={{ marginBottom: 0, background: "#fff7f7" }}>
+              <span style={{ fontWeight: 700 }}>{budgetOverview.nombre}</span>
+              <span>
+                {budgetOverview.globalPct}% usado de{" "}
+                {Number(budgetOverview.totalBudget).toLocaleString("es-MX", {
+                  style: "currency",
+                  currency: "MXN",
+                  maximumFractionDigits: 0,
+                })}
+              </span>
+            </div>
+            <div className="expenses-alert" style={{ marginBottom: 0, background: "#f8fafc", color: "#1f2937" }}>
+              <span>Balance disponible</span>
+              <strong>
+                {Number(budgetOverview.balance).toLocaleString("es-MX", {
+                  style: "currency",
+                  currency: "MXN",
+                  maximumFractionDigits: 0,
+                })}
+              </strong>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 160 }}>
+          <p style={{ color: "#9ca3af", fontSize: 14 }}>Sin egresos registrados este mes.</p>
+        </div>
       </div>
     );
   }
- 
-  const mesActual = new Date().toLocaleDateString("es-MX", { month: "long", year: "numeric" });
  
   return (
     <div className="card expenses-card">
@@ -217,6 +253,39 @@ export default function ExpensesChart({ uuid }) {
           </p>
         </div>
       </div>
+
+      {budgetOverview && budgetOverview.totalBudget > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: "0.75rem",
+            marginBottom: "1rem",
+          }}
+        >
+          <div className="expenses-alert" style={{ marginBottom: 0, background: "#fff7f7" }}>
+            <span style={{ fontWeight: 700 }}>{budgetOverview.nombre}</span>
+            <span>
+              {budgetOverview.globalPct}% usado de{" "}
+              {Number(budgetOverview.totalBudget).toLocaleString("es-MX", {
+                style: "currency",
+                currency: "MXN",
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </div>
+          <div className="expenses-alert" style={{ marginBottom: 0, background: "#f8fafc", color: "#1f2937" }}>
+            <span>Balance disponible</span>
+            <strong>
+              {Number(budgetOverview.balance).toLocaleString("es-MX", {
+                style: "currency",
+                currency: "MXN",
+                maximumFractionDigits: 0,
+              })}
+            </strong>
+          </div>
+        </div>
+      )}
  
       <div className="expenses-layout">
         <div className="expenses-chart-area">
@@ -294,6 +363,22 @@ export default function ExpensesChart({ uuid }) {
             ))}{" "}
             {alertas.length === 1 ? "está cerca del límite." : "están cerca del límite."}
           </span>
+        </div>
+      )}
+
+      {riskAlert && (
+        <div className="expenses-alert">
+          <Sparkles size={16} color="#EC0029" />
+          <span>
+            Alerta de IA: {riskAlert.message} Ya consumiste {riskAlert.pct}% del presupuesto en los ultimos 5 dias.
+          </span>
+        </div>
+      )}
+
+      {streakMessage && (
+        <div className="expenses-alert" style={{ background: "#f0faf0", color: "#1f5134" }}>
+          <Trophy size={16} color="#2f9e44" />
+          <span>{streakMessage.message}</span>
         </div>
       )}
     </div>

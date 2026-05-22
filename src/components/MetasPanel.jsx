@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Flag, Target } from "lucide-react";
 import { createMeta, deleteMeta, fetchMetas, updateMeta } from "../services/metasService";
+import { getUserUuid } from "../utils/userUuid";
 import "./css/metas.css";
-
 
 const ITEMS_PER_PAGE = 10;
 const SECTION_DEFINITIONS = [
@@ -193,7 +193,7 @@ function MetasPanel({ uuid }) {
     setDeletingId(metaId);
     setActionError(null);
     try {
-      await deleteMeta({ idMeta: metaId, uuid });
+      await deleteMeta({ idMeta: metaId, uuid: uuid });
       setMetas((prev) => prev.filter((meta) => meta.id !== metaId));
       if (editingMetaId === metaId) closeModal();
     } catch (err) {
@@ -234,7 +234,7 @@ function MetasPanel({ uuid }) {
         try {
           const updatedMeta = await updateMeta({
             idMeta: editingMetaId,
-            uuid,
+            uuid: uuid,
             nombreMeta: formData.nombreMeta.trim(),
             monto: Number(formData.monto),
             fechaInicio: formData.fechaInicio,
@@ -264,7 +264,7 @@ function MetasPanel({ uuid }) {
 
       try {
         const createdMeta = await createMeta({
-          uuid,
+          uuid: uuid,
           nombreMeta: formData.nombreMeta.trim(),
           monto: Number(formData.monto),
           fechaInicio: formData.fechaInicio,

@@ -349,6 +349,7 @@ describe("HU-07 · Chatbot Asesor IA E2E", () => {
       // Si escribimos de nuevo, el botón se habilita
       cy.get(".chatbot-input").should('not.be.disabled').type("intentar de nuevo", { delay: 50 });
       cy.get(".chatbot-input").should('have.value', 'intentar de nuevo');
+      cy.get(".chatbot-input").type("Reintento");
       cy.get(".chatbot-send").should("not.be.disabled");
     });
 

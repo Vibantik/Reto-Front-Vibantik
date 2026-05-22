@@ -4,8 +4,10 @@ import {
   fetchPresupuestos,
   fetchPresupuesto,
   createPresupuesto,
+  deletePresupuesto,
 } from "../../services/presupuestosService";
-
+import { subscribeToTransactionStream } from "../../services/transactionsStream";
+import { getUserUuid } from "../../utils/userUuid";
 import "./presupuestos.css";
 
 import HubView            from "./VistaPrincipal/HubView.jsx";
@@ -98,6 +100,22 @@ export default function PresupuestosPanel({ uuid }) {
     return () => { cancelled = true; };
   }, [selectedPresId]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToTransactionStream(async () => {
+      try {
+        await loadData();
+        if (selectedPresId) {
+          const detalle = await fetchPresupuesto(selectedPresId);
+          setPresupuestoDetalle(detalle);
+        }
+      } catch (error) {
+        console.error("Error syncing presupuesto after streamed transaction:", error);
+      }
+    });
+
+    return unsubscribe;
+  }, [loadData, selectedPresId]);
+
   //montos de presupuesto
   const categoriasConMonto = (presupuestoDetalle?.categorias || []).map((rpc) => ({
     id_categ: rpc.id_categ,
@@ -162,6 +180,23 @@ export default function PresupuestosPanel({ uuid }) {
   const handlePresupuestoChange = useCallback((id) => {
     setSelectedPresId(id);
   }, []);
+
+  const handleDeleteBudget = useCallback(async () => {
+    if (!selectedPresId) return;
+    const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este presupuesto?");
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      await deletePresupuesto(selectedPresId);
+      setSelectedPresId(null);
+      await loadData();
+    } catch (err) {
+      console.error("Error al eliminar el presupuesto:", err);
+      setError("No se pudo eliminar el presupuesto.");
+      setLoading(false);
+    }
+  }, [selectedPresId, loadData]);
 
   const openCreateModal = useCallback(() => {
     const defaultName = `Presupuesto ${new Date().toLocaleDateString("es-MX", {
@@ -278,14 +313,13 @@ export default function PresupuestosPanel({ uuid }) {
           selectedPresId={selectedPresId}
           onPresupuestoChange={handlePresupuestoChange}
           onCreatePresupuesto={openCreateModal}
+          onDeletePresupuesto={handleDeleteBudget}
           creatingPresupuesto={creatingPresupuesto}
           presupuesto={presupuestoDetalle}
           categoriasConMonto={categoriasConMonto}
           transactions={transacciones}
-          allCategorias={categorias}
           onCategoryClick={goToDetail}
           onManageClick={() => goToConfig(null, "hub")}
-          onReload={loadData}
         />
       )}
 
