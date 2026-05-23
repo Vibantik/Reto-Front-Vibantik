@@ -1,3 +1,5 @@
+import { getUserUuid } from "../utils/userUuid";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const fetchUserSettings = async (uuid = getUserUuid()) => {

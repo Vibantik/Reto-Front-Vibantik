@@ -2,23 +2,28 @@ import React from "react";
 import { PromptSuggestion } from "./PromptSuggestion";
 import '../css/chatPrompt.css';
 
-export default function PromptContainer({ setInput, suggestions = null }) {
-    const defaultSuggestions = [
-        { text: "¿Cuál ha sido mi mayor gasto del mes?", highlight: "mayor gasto" },
-        { text: "¿Cómo puedo empezar a invertir?", highlight: "invertir" },
-        { text: "Ayúdame a planear mi siguiente meta financiera", highlight: "meta financiera" },
-    ];
-
-    const items = suggestions && suggestions.length ? suggestions : defaultSuggestions;
-
+export default function PromptContainer({ setInput }) {
     return (
         <div className="chatbot-suggestions-container">
             <div className="chatbot-suggestions-list">
-                {items.map((s, i) => (
-                    <PromptSuggestion key={i} highlight={s.highlight} onClick={() => setInput(s.text)}>
-                        {s.text}
-                    </PromptSuggestion>
-                ))}
+                <PromptSuggestion
+                    highlight="mayor gasto"
+                    onClick={() => setInput("¿Cuál ha sido mi mayor gasto del mes?")}
+                >
+                    ¿Cuál ha sido mi mayor gasto del mes?
+                </PromptSuggestion>
+                <PromptSuggestion
+                    highlight="invertir"
+                    onClick={() => setInput("¿Cómo puedo empezar a invertir?")}
+                >
+                    ¿Cómo puedo empezar a invertir?
+                </PromptSuggestion>
+                <PromptSuggestion
+                    highlight="meta financiera"
+                    onClick={() => setInput("Ayúdame a planear mi siguiente meta financiera")}
+                >
+                    Ayúdame a planear mi siguiente meta financiera
+                </PromptSuggestion>
             </div>
         </div>
     );

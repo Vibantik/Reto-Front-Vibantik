@@ -9,13 +9,8 @@ const INITIAL_MESSAGES = [
   },
 ];
 
-export function useChatbot(options = {}) {
-  const { systemPrompt } = options;
-  const initial = systemPrompt
-    ? [{ role: "system", content: systemPrompt }]
-    : INITIAL_MESSAGES;
-
-  const [messages, setMessages] = useState(initial);
+export function useChatbot(uuid) {
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
@@ -38,7 +33,7 @@ export function useChatbot(options = {}) {
 
     const initConversation = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/chat/conversation", {
+        const res = await fetch(import.meta.env.VITE_API_URL + "/api/chat/conversation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ uuid_de_usuario }),
@@ -90,7 +85,7 @@ export function useChatbot(options = {}) {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("http://localhost:3000/api/ia/agentic", {
+      const res = await fetch(import.meta.env.VITE_API_URL + "/api/ia/agentic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -157,7 +152,7 @@ export function useChatbot(options = {}) {
       const responseToPersist = toolPayload?.content || accumulated;
       if (conversationId && responseToPersist.trim()) {
         try {
-          await fetch("http://localhost:3000/api/chat/message", {
+          await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
