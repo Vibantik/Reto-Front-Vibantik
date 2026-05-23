@@ -8,7 +8,7 @@ import Pagination from "./Pagination";
 import CashflowChart from "./CashflowChart";
 import "./css/transactions.css";
 
-const SSE_URL = import.meta.env.VITE_API_URL + "/api/transactions/stream";
+const SSE_URL = "http://localhost:3000/api/transactions/stream";
 
 function TransactionsPanel({ showChart = true }) {
   const [searchTerm, setSearchTerm]           = useState("");
