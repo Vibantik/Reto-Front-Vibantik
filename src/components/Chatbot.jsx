@@ -1,8 +1,9 @@
 import { useChatbot } from "./chatbotElements/useChatbot";
 import { X, Send } from "lucide-react";
 import PromptContainer from "./chatbotElements/PromptContainer";
+import ChatBubble from "./chatbotElements/ChatBubble";
 
-export default function Chatbot({ open, onClose }) {
+export default function Chatbot({ open, onClose, uuid }) {
   const { messages,
     input,
     setInput,
@@ -11,7 +12,8 @@ export default function Chatbot({ open, onClose }) {
     messagesEndRef,
     sendMessage,
     handleKeyDown,
-  } = useChatbot();
+    appendMessage,
+  } = useChatbot(uuid);
 
   if (!open) return null;
 
@@ -27,20 +29,19 @@ export default function Chatbot({ open, onClose }) {
 
         <div className="chatbot-messages">
           {messages.map((msg, i) => (
-            <div
+            <ChatBubble
               key={i}
-              className={`chat-bubble ${msg.role === "user" ? "user" : "bot"} bubble-enter`}
-            >
-              {msg.content}
-            </div>
+              message={msg}
+              onToolComplete={appendMessage}
+            />
           ))}
 
           {/* shows text token by token */}
           {loading && streamingText && (
-            <div className="chat-bubble bot bubble-enter">
-              {streamingText}
-              <span className="cursor-blink" />
-            </div>
+            <ChatBubble
+              message={{ role: "assistant", type: "text", content: streamingText }}
+              streaming
+            />
           )}
 
           {/* Typing dots — only when waiting for first token */}

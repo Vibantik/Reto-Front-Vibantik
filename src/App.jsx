@@ -7,19 +7,23 @@ import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import InversionesPanel from "./components/InversionesPanel";
 import PresupuestosPanel from "./components/Presupuestos/PresupuestosPanel";
+import PresupuestoInfoCard from "./components/PresupuestoInfoCard";
 import MetasPanel from "./components/MetasPanel";
 import Sidebar from "./components/Sidebar";
 import SugerenciasCard from "./components/SugerenciasCard";
 import { fetchInversiones } from "./services/inversionesService";
 import ReportesPanel from "./components/ReportesPanel";
+import UserPicker from "./components/UserPicker";
+import { getSession, setSession, clearSession, getActiveUser } from "./utils/session";
 
 import "./App.css";
- 
-function InversionInfoCard() {
+
+function InversionInfoCard({ uuid }) {
   const [resumen, setResumen] = useState(null);
  
   useEffect(() => {
-    fetchInversiones()
+    if (!uuid) return;
+    fetchInversiones(uuid)
       .then((data) => {
         const hoy = new Date();
         const activas = data.filter((i) => new Date(i.fecha_fin) > hoy);
@@ -30,7 +34,7 @@ function InversionInfoCard() {
         setResumen({ total, numActivas: activas.length, porVencer });
       })
       .catch(() => setResumen(null));
-  }, []);
+  }, [uuid]);
  
   const fmt = (n) =>
     Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
@@ -59,24 +63,67 @@ function InversionInfoCard() {
     </div>
   );
 }
- 
+
 export default function App() {
-  const [chatOpen, setChatOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Inicio");
+  const [uuid, setUuid]         = useState(() => getSession());
+  const [activeUser, setActiveUser] = useState(() => getActiveUser());
+  const [showPicker, setShowPicker] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("picker") || params.has("userpicker") || window.location.hash === "#userpicker";
+  });
+
+  const [chatOpen, setChatOpen]     = useState(false);
+  const [activeTab, setActiveTab]   = useState("Inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
- 
+
+  const handleSelectUser = (selectedUuid, userObj) => {
+    setSession(selectedUuid, userObj);
+    setUuid(selectedUuid);
+    setActiveUser(userObj);
+    setShowPicker(false);
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("picker");
+      url.searchParams.delete("userpicker");
+      if (url.hash === "#userpicker") {
+        url.hash = "";
+      }
+      window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSignOut = () => {
+    clearSession();
+    setUuid(null);
+    setActiveUser(null);
+    setChatOpen(false);
+    setSidebarOpen(false);
+    setActiveTab("Inicio");
+    setShowPicker(true);
+  };
+
+  if (showPicker || !uuid) {
+    return <UserPicker onSelect={handleSelectUser} />;
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case "Inicio":
         return (
           <main className="dashboard">
             <div className="dashboard-row">
-              <ExpensesChart />
-              <SugerenciasCard />
+              <ExpensesChart uuid={uuid} />
+              <SugerenciasCard uuid={uuid} />
             </div>
             <div className="dashboard-row">
-              <StocksPanel />
-              <InversionInfoCard />
+              <StocksPanel uuid={uuid} />
+              <InversionInfoCard uuid={uuid} />
+            </div>
+            <div className="dashboard-row">
+              <PresupuestoInfoCard onViewDetails={() => setActiveTab("Presupuestos")} />
             </div>
           </main>
         );
@@ -92,7 +139,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <InversionesPanel />
+              <InversionesPanel uuid={uuid} />
             </div>
           </main>
         );
@@ -100,7 +147,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <PresupuestosPanel />
+              <PresupuestosPanel uuid={uuid} />
             </div>
           </main>
         );
@@ -108,18 +155,18 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <MetasPanel />
+              <MetasPanel uuid={uuid} />
             </div>
           </main>
         );
-        case "Reportes":
-  return (
-    <main className="dashboard">
-      <div className="dashboard-row transactions-row">
-        <ReportesPanel />
-      </div>
-    </main>
-  );
+      case "Reportes":
+        return (
+          <main className="dashboard">
+            <div className="dashboard-row transactions-row">
+              <ReportesPanel />
+            </div>
+          </main>
+        );
       default:
         return (
           <main className="dashboard">
@@ -131,18 +178,23 @@ export default function App() {
         );
     }
   };
- 
+
   return (
     <div className="app">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        activeUser={activeUser}
+      />
+      <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
       {renderContent()}
       {!chatOpen && (
         <button className="fab" onClick={() => setChatOpen(true)}>
           <MessageCircle size={28} />
         </button>
       )}
-      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} />
+      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} uuid={uuid} />
     </div>
   );
 }

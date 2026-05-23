@@ -20,5 +20,20 @@ describe('<ChatBubble />', () => {
     cy.get('.chat-bubble').should('have.class', 'bot')
   })
 
+  it('muestra fallback cuando llega un ui_tool desconocido', () => {
+    cy.mount(
+      <ChatBubble
+        message={{
+          role: 'assistant',
+          type: 'ui_tool',
+          tool: 'unknown_tool',
+          content: 'Intentando cargar widget',
+        }}
+      />
+    )
+
+    cy.get('.chat-bubble').should('contain.text', 'widget interactivo no esta disponible')
+  })
+
 
 })

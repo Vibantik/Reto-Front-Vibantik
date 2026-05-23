@@ -1,0 +1,247 @@
+/* ── UserPicker ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+.picker-root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #c8002a 0%, #8b0019 50%, #1a0005 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* floating decorative circles */
+.picker-root::before,
+.picker-root::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+  pointer-events: none;
+}
+.picker-root::before {
+  width: 600px;
+  height: 600px;
+  background: white;
+  top: -200px;
+  right: -150px;
+}
+.picker-root::after {
+  width: 400px;
+  height: 400px;
+  background: white;
+  bottom: -180px;
+  left: -120px;
+}
+
+.picker-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: 48px 40px 40px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
+  animation: picker-fadeIn 0.45s ease-out both;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes picker-fadeIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.picker-logo {
+  height: 28px;
+  filter: brightness(0) invert(1);
+  margin-bottom: 32px;
+  display: block;
+}
+
+.picker-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.picker-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.picker-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+/* ── User list ── */
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.picker-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.picker-user-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: inherit;
+}
+
+.picker-user-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.picker-user-btn:hover::after {
+  opacity: 1;
+}
+
+.picker-user-btn:active {
+  transform: translateX(2px) scale(0.99);
+}
+
+/* ── Avatar ── */
+.picker-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+.picker-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-user-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-user-uuid {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: 'Courier New', monospace;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-arrow {
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+  transition: color 0.2s, transform 0.2s;
+  font-size: 18px;
+}
+
+.picker-user-btn:hover .picker-arrow {
+  color: rgba(255, 255, 255, 0.8);
+  transform: translateX(3px);
+}
+
+/* ── Loading / Error states ── */
+.picker-status {
+  text-align: center;
+  padding: 28px 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+}
+
+.picker-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.7);
+  border-radius: 50%;
+  animation: picker-spin 0.75s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes picker-spin {
+  to { transform: rotate(360deg); }
+}
+
+.picker-error-msg {
+  color: #ffaaaa;
+  font-size: 13px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.picker-retry-btn {
+  display: block;
+  margin: 8px auto 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.picker-retry-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ── Footer note ── */
+.picker-footer {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+}

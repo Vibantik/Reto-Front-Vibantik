@@ -1,7 +1,12 @@
 import banorteLogo from "../assets/banorte-logo.png";
 
-export default function Header({ activeTab, onTabChange, toggleSidebar }) {
-const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos"];
+const getInitials = (user) => {
+  if (!user) return "?";
+  return `${user.nombre?.[0] ?? ""}${user.apellido?.[0] ?? ""}`.toUpperCase();
+};
+
+export default function Header({ activeTab, onTabChange, toggleSidebar, activeUser }) {
+  const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos"];
 
   return (
     <header className="header">
@@ -22,7 +27,14 @@ const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Mov
           ))}
         </nav>
         <div className="header-user">
-          <div className="header-avatar" onClick={toggleSidebar} style={{ cursor: 'pointer' }} title="Configuración">R</div>
+          <div
+            className="header-avatar"
+            onClick={toggleSidebar}
+            style={{ cursor: "pointer" }}
+            title={activeUser ? `${activeUser.nombre} ${activeUser.apellido} - Configuración` : "Configuración"}
+          >
+            {getInitials(activeUser)}
+          </div>
         </div>
       </div>
     </header>

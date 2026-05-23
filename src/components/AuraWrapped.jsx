@@ -500,7 +500,7 @@ function NavBar({slide, total, onPrev, onNext, onClose, darkBg}) {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN
 // ══════════════════════════════════════════════════════════════════════════════
-export default function AuraWrapped({onClose}) {
+export default function AuraWrapped({uuid, onClose}) {
   const [step,      setStep]      = useState("loading");
   const [slide,     setSlide]     = useState(0);
   const [dir,       setDir]       = useState("next");
@@ -510,13 +510,14 @@ export default function AuraWrapped({onClose}) {
   const touchRef = useRef(null);
 
   useEffect(()=>{
+    if (!uuid) return;
     const ahora=new Date();
     const mes=String(ahora.getMonth()+1).padStart(2,"0");
     const ini=`${ahora.getFullYear()}-${mes}-01`;
     const fin=ahora.toISOString().slice(0,10);
     Promise.all([
       fetchTransactions({page:1,limit:500,startDate:ini,endDate:fin}),
-      fetchInversiones().catch(()=>[]),
+      fetchInversiones(uuid).catch(()=>[]),
     ]).then(([txRes,inv])=>{
       const d=calcular(txRes.data??[],inv);
       setData(d); setStep("ready");
@@ -525,7 +526,7 @@ export default function AuraWrapped({onClose}) {
         pedirIA(d).then(setIa).catch(()=>setIa(null)).finally(()=>setIaLoading(false));
       }
     }).catch(()=>setStep("error"));
-  },[]);
+  },[uuid]);
 
   const TOTAL=6;
   const goTo=useCallback((n,d)=>{setDir(d);setSlide(n);},[]);

@@ -1124,3 +1124,123 @@
     width: 100%;
   }
 }
+
+/* ── Modal (Crear Presupuesto) ── */
+.pres-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pres-modal {
+  width: min(620px, 100%);
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(91, 102, 112, 0.16);
+  box-shadow: 0 18px 38px rgba(17, 24, 39, 0.25);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.pres-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.pres-modal-head h3 {
+  margin: 0;
+  color: #323e48;
+  font-family: "Gotham", "Roboto", sans-serif;
+  font-size: 28px;
+}
+
+.pres-close-btn {
+  border: none;
+  background: #eef2f6;
+  color: #4b5563;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pres-close-btn:hover {
+  background: #e0e5e8;
+}
+
+.pres-form {
+  display: grid;
+  gap: 14px;
+}
+
+.pres-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #4b5563;
+  font-family: "Gotham", sans-serif;
+  font-weight: 600;
+}
+
+.pres-form input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1f2933;
+  font-family: "Roboto", sans-serif;
+  box-sizing: border-box;
+}
+
+.pres-form input:focus {
+  outline: 2px solid rgba(235, 0, 41, 0.2);
+  border-color: #eb0029;
+}
+
+.pres-form-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pres-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.pres-submit-btn {
+  border: none;
+  background: #eb0029;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-family: "Gotham", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pres-submit-btn:hover {
+  background: #c70023;
+}
+.pres-submit-btn:disabled {
+  background: #c1c7ce;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .pres-form-dates {
+    grid-template-columns: 1fr;
+  }
+}

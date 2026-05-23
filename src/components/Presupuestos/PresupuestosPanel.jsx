@@ -4,7 +4,9 @@ import {
   fetchPresupuestos,
   fetchPresupuesto,
   createPresupuesto,
+  deletePresupuesto,
 } from "../../services/presupuestosService";
+import { subscribeToTransactionStream } from "../../services/transactionsStream";
 import { getUserUuid } from "../../utils/userUuid";
 import "./presupuestos.css";
 
@@ -21,7 +23,7 @@ function isValidIsoDate(value) {
 }
 
 
-export default function PresupuestosPanel() {
+export default function PresupuestosPanel({ uuid }) {
   const [categorias, setCategorias]         = useState([]);
   const [presupuestos, setPresupuestos]     = useState([]);
   const [selectedPresId, setSelectedPresId] = useState(null);
@@ -30,8 +32,16 @@ export default function PresupuestosPanel() {
   const [error, setError]                   = useState(null);
   const [creatingPresupuesto, setCreatingPresupuesto] = useState(false);
   const [createError, setCreateError]       = useState(null);
+  
+  const [isModalOpen, setIsModalOpen]       = useState(false);
+  const [formData, setFormData]             = useState({
+    nombre: "",
+    monto_limite: "",
+    inicio: "",
+    fin: "",
+  });
 
-  const uuid = getUserUuid();
+
 
   //datos iniciales
   const loadData = useCallback(async () => {
@@ -66,7 +76,7 @@ export default function PresupuestosPanel() {
     }
   }, [uuid, selectedPresId]);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   // detalle presupuesto 
   useEffect(() => {
@@ -89,6 +99,22 @@ export default function PresupuestosPanel() {
 
     return () => { cancelled = true; };
   }, [selectedPresId]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToTransactionStream(async () => {
+      try {
+        await loadData();
+        if (selectedPresId) {
+          const detalle = await fetchPresupuesto(selectedPresId);
+          setPresupuestoDetalle(detalle);
+        }
+      } catch (error) {
+        console.error("Error syncing presupuesto after streamed transaction:", error);
+      }
+    });
+
+    return unsubscribe;
+  }, [loadData, selectedPresId]);
 
   //montos de presupuesto
   const categoriasConMonto = (presupuestoDetalle?.categorias || []).map((rpc) => ({
@@ -155,55 +181,87 @@ export default function PresupuestosPanel() {
     setSelectedPresId(id);
   }, []);
 
-  const handleCreatePresupuesto = useCallback(async () => {
-    if (creatingPresupuesto) return;
-    setCreateError(null);
+  const handleDeleteBudget = useCallback(async () => {
+    if (!selectedPresId) return;
+    const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este presupuesto?");
+    if (!confirmDelete) return;
 
+    try {
+      setLoading(true);
+      await deletePresupuesto(selectedPresId);
+      setSelectedPresId(null);
+      await loadData();
+    } catch (err) {
+      console.error("Error al eliminar el presupuesto:", err);
+      setError("No se pudo eliminar el presupuesto.");
+      setLoading(false);
+    }
+  }, [selectedPresId, loadData]);
+
+  const openCreateModal = useCallback(() => {
     const defaultName = `Presupuesto ${new Date().toLocaleDateString("es-MX", {
       month: "long",
       year: "numeric",
     })}`;
-    const nombreInput = window.prompt("Nombre del nuevo presupuesto:", defaultName);
-    if (nombreInput === null) return;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    
+    // Recomendación basada en el ingreso del presupuesto anterior (el actualmente seleccionado)
+    const ingresoRecomendado = transacciones
+      .filter((t) => t.type === "ingreso")
+      .reduce((a, t) => a + t.amount, 0);
+    
+    setFormData({
+      nombre: defaultName,
+      monto_limite: String(ingresoRecomendado || 0),
+      inicio: todayIso,
+      fin: "",
+    });
+    setCreateError(null);
+    setIsModalOpen(true);
+  }, [transacciones]);
 
-    const nombre = nombreInput.trim();
-    if (!nombre) {
+  const closeCreateModal = useCallback(() => {
+    setIsModalOpen(false);
+    setCreateError(null);
+  }, []);
+
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleCreatePresupuestoSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (creatingPresupuesto) return;
+    setCreateError(null);
+
+    const { nombre, monto_limite, inicio, fin } = formData;
+    
+    const nombreStr = nombre.trim();
+    if (!nombreStr) {
       setCreateError("El nombre del presupuesto es obligatorio.");
       return;
     }
 
-    const montoInput = window.prompt("Monto limite total:", "0");
-    if (montoInput === null) return;
-
-    const montoLimite = Number(String(montoInput).replace(",", "."));
-    if (!Number.isFinite(montoLimite) || montoLimite < 0) {
+    const montoNum = Number(String(monto_limite).replace(",", "."));
+    if (!Number.isFinite(montoNum) || montoNum < 0) {
       setCreateError("El monto limite debe ser un numero mayor o igual a 0.");
       return;
     }
 
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const inicioInput = window.prompt("Fecha de inicio (YYYY-MM-DD):", todayIso);
-    if (inicioInput === null) return;
-
-    const inicio = inicioInput.trim();
-    if (!isValidIsoDate(inicio)) {
+    const inicioStr = inicio.trim();
+    if (!isValidIsoDate(inicioStr)) {
       setCreateError("La fecha de inicio debe tener el formato YYYY-MM-DD.");
       return;
     }
 
-    const finInput = window.prompt(
-      "Fecha de fin opcional (YYYY-MM-DD). Deja vacio para sin fin:",
-      ""
-    );
-    if (finInput === null) return;
-
-    const fin = finInput.trim();
-    if (fin && !isValidIsoDate(fin)) {
+    const finStr = fin.trim();
+    if (finStr && !isValidIsoDate(finStr)) {
       setCreateError("La fecha de fin debe tener el formato YYYY-MM-DD.");
       return;
     }
 
-    if (fin && fin < inicio) {
+    if (finStr && finStr < inicioStr) {
       setCreateError("La fecha de fin no puede ser menor a la fecha de inicio.");
       return;
     }
@@ -213,12 +271,12 @@ export default function PresupuestosPanel() {
 
       const payload = {
         uuid_de_usuario: uuid,
-        nombre,
-        monto_limite: montoLimite,
-        inicio,
+        nombre: nombreStr,
+        monto_limite: montoNum,
+        inicio: inicioStr,
         categorias: [],
       };
-      if (fin) payload.fin = fin;
+      if (finStr) payload.fin = finStr;
 
       const created = await createPresupuesto(payload);
       const createdId = Number(
@@ -233,13 +291,14 @@ export default function PresupuestosPanel() {
       }
 
       await loadData();
+      closeCreateModal();
     } catch (err) {
       console.error("Error creating presupuesto:", err);
       setCreateError(err?.message || "No se pudo crear el presupuesto.");
     } finally {
       setCreatingPresupuesto(false);
     }
-  }, [creatingPresupuesto, uuid, loadData]);
+  }, [creatingPresupuesto, uuid, loadData, formData, closeCreateModal]);
 
   // ! Render 
   return (
@@ -253,15 +312,14 @@ export default function PresupuestosPanel() {
           presupuestos={presupuestos}
           selectedPresId={selectedPresId}
           onPresupuestoChange={handlePresupuestoChange}
-          onCreatePresupuesto={handleCreatePresupuesto}
+          onCreatePresupuesto={openCreateModal}
+          onDeletePresupuesto={handleDeleteBudget}
           creatingPresupuesto={creatingPresupuesto}
           presupuesto={presupuestoDetalle}
           categoriasConMonto={categoriasConMonto}
           transactions={transacciones}
-          allCategorias={categorias}
           onCategoryClick={goToDetail}
           onManageClick={() => goToConfig(null, "hub")}
-          onReload={loadData}
         />
       )}
 
@@ -285,6 +343,80 @@ export default function PresupuestosPanel() {
           onSave={handleSaveCategories}
           onBack={goBack}
         />
+      )}
+
+      {isModalOpen && (
+        <div className="pres-modal-overlay" onClick={closeCreateModal}>
+          <div className="pres-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="pres-modal-head">
+              <h3>Crear presupuesto</h3>
+              <button type="button" className="pres-close-btn" onClick={closeCreateModal}>
+                Cerrar
+              </button>
+            </div>
+            
+            <form className="pres-form" onSubmit={handleCreatePresupuestoSubmit}>
+              <label>
+                Nombre del presupuesto
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  placeholder="Ej. Presupuesto Mensual"
+                  required
+                />
+              </label>
+
+              <label>
+                Monto limite total
+                <input
+                  type="number"
+                  name="monto_limite"
+                  value={formData.monto_limite}
+                  onChange={handleInputChange}
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </label>
+
+              <div className="pres-form-dates">
+                <label>
+                  Fecha de inicio
+                  <input
+                    type="date"
+                    name="inicio"
+                    value={formData.inicio}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
+                <label>
+                  Fecha de fin (opcional)
+                  <input
+                    type="date"
+                    name="fin"
+                    value={formData.fin}
+                    onChange={handleInputChange}
+                  />
+                </label>
+              </div>
+
+              {createError && (
+                <div style={{ color: "var(--banorte-red)", fontSize: "13px", marginTop: "4px" }}>
+                  {createError}
+                </div>
+              )}
+
+              <div className="pres-form-actions">
+                <button type="submit" className="pres-submit-btn" disabled={creatingPresupuesto}>
+                  {creatingPresupuesto ? "Creando..." : "Crear presupuesto"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </section>

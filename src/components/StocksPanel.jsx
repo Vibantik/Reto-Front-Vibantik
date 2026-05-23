@@ -65,19 +65,39 @@ function CustomTooltip({ active, payload, label, inversiones }) {
   );
 }
  
-export default function StocksPanel() {
+export default function StocksPanel({ uuid }) {
   const [inversiones, setInversiones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [highlighted, setHighlighted] = useState(null);
  
   useEffect(() => {
-    fetchInversiones()
+    if (!uuid) return;
+    setLoading(true);
+    fetchInversiones(uuid)
       .then(data => setInversiones(data.slice(0, 6))) // máx 6 para colores
       .catch(() => setInversiones([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [uuid]);
  
   const chartData = buildChartData(inversiones);
+
+  // ajustar para tamaño de stocks
+  const { yMin, yMax } = chartData.reduce(
+    (acc, point) => {
+      Object.values(point).forEach((value) => {
+        if (typeof value !== "number" || Number.isNaN(value)) return;
+        acc.min = Math.min(acc.min, value);
+        acc.max = Math.max(acc.max, value);
+      });
+      return acc;
+    },
+    { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY }
+  );
+
+  const yPadding = Number.isFinite(yMax - yMin) ? (yMax - yMin) * 0.15 : 0;
+  const yDomain = Number.isFinite(yMin) && Number.isFinite(yMax)
+    ? [Math.max(0, yMin - yPadding), yMax + yPadding]
+    : [0, "auto"];
  
   const fmt = (n) =>
     Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -175,6 +195,7 @@ export default function StocksPanel() {
                 tick={{ fontSize: 10, fill: "#999" }}
                 axisLine={false}
                 tickLine={false}
+                domain={yDomain}
                 tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
               />
               <Tooltip content={<CustomTooltip inversiones={inversiones} />} cursor={{ stroke: "#ddd", strokeDasharray: "4 4" }} />

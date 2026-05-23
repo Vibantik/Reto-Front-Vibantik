@@ -62,7 +62,7 @@ const FONDO_2 = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
  
 function mockInversiones(data) {
-  cy.intercept("GET", "**/api/inversiones*", { statusCode: 200, body: data }).as("getInversiones");
+  cy.intercept("GET", "**/api/inversiones/u/dbf9f839-b57e-415f-8b5b-9213524ed827*", { statusCode: 200, body: data }).as("getInversionesByUser");
   // Silencia otras APIs que la app pueda llamar
   cy.intercept("GET", "**/api/transactions*", { body: { data: [], pagination: {} } });
   cy.intercept("GET", "**/api/presupuestos*", { body: [] });
@@ -83,7 +83,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([PLAZO_1]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-01 · muestra el nombre de la inversión", () => {
@@ -120,7 +120,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([PLAZO_1, PLAZO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-02 · muestra ambas inversiones a plazo", () => {
@@ -143,7 +143,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([PLAZO_1, PLAZO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-03 · al hacer clic en una tarjeta muestra sus detalles completos", () => {
@@ -159,7 +159,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([FONDO_1]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-04 · muestra el nombre del fondo", () => {
@@ -194,7 +194,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([FONDO_1]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it.skip("CP-06 · el panel de punto seleccionado tiene botón para limpiar selección", () => {
@@ -213,7 +213,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([FONDO_1, FONDO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-07 · muestra ambos fondos", () => {
@@ -236,7 +236,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([FONDO_1, FONDO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-08 · al hacer clic en Ver más muestra el detalle completo del fondo", () => {
@@ -257,7 +257,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([PLAZO_1, PLAZO_2, FONDO_1, FONDO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-09 · muestra la sección Inversiones a Plazo", () => {
@@ -282,7 +282,7 @@ describe("HU-04 · Inversiones E2E", () => {
     it("CP-10 · sin plazo muestra mensaje vacío pero sí muestra los fondos", () => {
       mockInversiones([FONDO_1]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
  
       cy.contains("Inversiones a Plazo").should("be.visible");
       cy.contains(/no tienes inversiones a plazo/i).should("be.visible");
@@ -293,7 +293,7 @@ describe("HU-04 · Inversiones E2E", () => {
     it("CP-10 · sin fondos muestra mensaje vacío pero sí muestra inversiones a plazo", () => {
       mockInversiones([PLAZO_1]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
  
       cy.contains("Fondos de Inversión").should("be.visible");
       cy.contains(/no tienes fondos/i).should("be.visible");
@@ -339,7 +339,7 @@ describe("HU-04 · Inversiones E2E", () => {
     beforeEach(() => {
       mockInversiones([FONDO_1, FONDO_2]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-12 · Ver más expande el card", () => {
@@ -378,7 +378,7 @@ describe("HU-04 · Inversiones E2E", () => {
       // Inversión que dura todo 2026: fácil de calcular
       mockInversiones([PLAZO_1]); // inicio 2026-01-01, fin 2026-12-31
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
     });
  
     it("CP-13 · la barra de progreso existe y tiene width entre 0% y 100%", () => {
@@ -422,7 +422,7 @@ describe("HU-04 · Inversiones E2E", () => {
  
       mockInversiones([fondoMinimo]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
  
       cy.contains("Fondo Mínimo").should("be.visible");
       cy.contains("$10,000.00").should("be.visible");
@@ -443,7 +443,7 @@ describe("HU-04 · Inversiones E2E", () => {
  
       mockInversiones([plazoMinimo]);
       irAInversiones();
-      cy.wait("@getInversiones");
+      cy.wait("@getInversionesByUser");
  
       cy.contains("CETES Mínimo").should("be.visible");
       cy.contains("$5,000.00").should("be.visible");
