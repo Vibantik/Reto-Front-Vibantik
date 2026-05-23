@@ -1,5 +1,53 @@
 // src/components/FondoCard.jsx
 import { useState, useCallback } from "react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, ReferenceDot,
+} from "recharts";
+import "./css/inversiones.css";
+ 
+// ── Helpers de formato ───────────────────────────────────────────────────────
+const fmtMXN = (n) =>
+  Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+ 
+const fmtPct = (n) => `${Number(n).toFixed(2)}%`;
+ 
+const fmtFecha = (d) => {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("es-MX", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+};
+ 
+const fmtFechaLarga = (d) => {
+  if (!d) return "";
+  return new Date(d).toLocaleDateString("es-MX", {
+    weekday: "short", day: "2-digit", month: "long", year: "numeric",
+  });
+};
+ 
+// ── Mapa de niveles de riesgo ────────────────────────────────────────────────
+const RIESGO_MAP = {
+  bajo:   { label: "BAJO",   color: "#16a34a", bg: "#dcfce7" },
+  medio:  { label: "MEDIO",  color: "#d97706", bg: "#fef3c7" },
+  alto:   { label: "ALTO",   color: "#dc2626", bg: "#fee2e2" },
+};
+ 
+// ── Tooltip personalizado de la gráfica ─────────────────────────────────────
+function FondoTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="fondo-tooltip">
+      <p className="fondo-tooltip-fecha">{fmtFechaLarga(label)}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="fondo-tooltip-dot" />
+        <span className="fondo-tooltip-valor">{fmtPct(payload[0].value)}</span>
+      </div>
+    </div>
+  );
+}
+ 
+// ── Componente principal ─────────────────────────────────────────────────────
 export default function FondoCard({ fondo, isExpandable = false }) {
   const {
     "id_inversión": idInversion,
@@ -15,17 +63,17 @@ export default function FondoCard({ fondo, isExpandable = false }) {
     rendimiento_diario,
     historial = [],
   } = fondo;
-
+ 
   const [activePoint, setActivePoint] = useState(null);
   const [expanded, setExpanded] = useState(!isExpandable);
-
+ 
   const riesgo = nivel_riesgo
     ? RIESGO_MAP[nivel_riesgo.toLowerCase()] ?? RIESGO_MAP.medio
     : null;
-
+ 
   const cambioNum = Number(cambio_tasa_anualizada);
   const cambioPositivo = cambioNum >= 0;
-
+ 
   const onChartClick = useCallback((chartData) => {
     if (chartData?.activePayload?.length) {
       setActivePoint({
@@ -34,12 +82,13 @@ export default function FondoCard({ fondo, isExpandable = false }) {
       });
     }
   }, []);
-
+ 
   return (
     <div
       className={`inversion-card fondo-card ${expanded ? "" : "fondo-list-item"}`}
       data-cy="fondo-card"
     >
+      {/* ── Vista colapsada (lista) ── */}
       {!expanded ? (
         <div className="fondo-list-row">
           <div className="fondo-list-nombre-col">
@@ -53,7 +102,7 @@ export default function FondoCard({ fondo, isExpandable = false }) {
             </div>
             <p className="inversion-tipo" data-cy="fondo-tipo">{tipo}</p>
           </div>
-
+ 
           <div className="fondo-list-stats">
             {tasa_rendimiento_diaria_anualizada != null && (
               <div className="fondo-list-stat">
@@ -70,18 +119,20 @@ export default function FondoCard({ fondo, isExpandable = false }) {
               </div>
             )}
           </div>
-
+ 
           <button
             className="fondo-toggle-btn"
             data-cy="fondo-toggle-btn"
             onClick={() => setExpanded(true)}
-            aria-expanded={false}
+            aria-expanded="false"
           >
             <span className="fondo-toggle-chevron">›</span>
             Ver más
           </button>
         </div>
+ 
       ) : (
+        /* ── Vista expandida ── */
         <>
           <div className="inversion-card-header">
             <div>
@@ -93,12 +144,16 @@ export default function FondoCard({ fondo, isExpandable = false }) {
               </p>
             </div>
             {riesgo && (
-              <span className="inversion-estatus" data-cy="fondo-riesgo" style={{ background: riesgo.bg, color: riesgo.color }}>
+              <span
+                className="inversion-estatus"
+                data-cy="fondo-riesgo"
+                style={{ background: riesgo.bg, color: riesgo.color }}
+              >
                 {riesgo.label}
               </span>
             )}
           </div>
-
+ 
           <div className="fondo-kpi-row">
             <div className="fondo-kpi">
               <span className="fondo-kpi-label">Cantidad invertida</span>
@@ -111,7 +166,7 @@ export default function FondoCard({ fondo, isExpandable = false }) {
               </div>
             )}
           </div>
-
+ 
           {(tasa_rendimiento_diaria_anualizada != null || cambio_tasa_anualizada != null || nivel_riesgo) && (
             <div className="inversion-detalles fondo-tasa-row">
               {tasa_rendimiento_diaria_anualizada != null && (
@@ -136,16 +191,16 @@ export default function FondoCard({ fondo, isExpandable = false }) {
               )}
             </div>
           )}
-
+ 
           {fecha_inicio && fecha_fin && (() => {
             const inicio = new Date(fecha_inicio);
-            const fin = new Date(fecha_fin);
-            const hoy = new Date();
-            const total = fin - inicio;
+            const fin    = new Date(fecha_fin);
+            const hoy    = new Date();
+            const total  = fin - inicio;
             const transcurrido = Math.min(hoy - inicio, total);
             const progreso = Math.max(0, Math.min(100, (transcurrido / total) * 100));
             const diasRest = Math.max(0, Math.ceil((fin - hoy) / (1000 * 60 * 60 * 24)));
-
+ 
             return (
               <>
                 <div className="inversion-detalles" data-cy="fondo-detalles">
@@ -163,7 +218,7 @@ export default function FondoCard({ fondo, isExpandable = false }) {
               </>
             );
           })()}
-
+ 
           {historial.length > 0 && (
             <div className="fondo-chart-wrapper">
               <p className="fondo-chart-title">Rendimiento diario anualizado (últimos 14 días)</p>
@@ -191,31 +246,54 @@ export default function FondoCard({ fondo, isExpandable = false }) {
                     width={46}
                     domain={["auto", "auto"]}
                   />
-                  <Tooltip content={<FondoTooltip />} cursor={{ stroke: "#ec0029", strokeWidth: 1, strokeDasharray: "4 2" }} />
-                  <Line type="monotone" dataKey="tasa" stroke="#ec0029" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#ec0029", stroke: "white", strokeWidth: 2, style: { filter: "drop-shadow(0 2px 6px rgba(236,0,41,0.4))" } }} />
+                  <Tooltip
+                    content={<FondoTooltip />}
+                    cursor={{ stroke: "#ec0029", strokeWidth: 1, strokeDasharray: "4 2" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="tasa"
+                    stroke="#ec0029"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 5, fill: "#ec0029", stroke: "white", strokeWidth: 2 }}
+                  />
                   {activePoint && (
-                    <ReferenceDot x={activePoint.fecha} y={activePoint.tasa} r={6} fill="#ec0029" stroke="white" strokeWidth={2} />
+                    <ReferenceDot
+                      x={activePoint.fecha}
+                      y={activePoint.tasa}
+                      r={6}
+                      fill="#ec0029"
+                      stroke="white"
+                      strokeWidth={2}
+                    />
                   )}
                 </LineChart>
               </ResponsiveContainer>
-
+ 
               {activePoint ? (
                 <div className="fondo-selected-point">
                   <span className="fondo-selected-fecha">{fmtFechaLarga(activePoint.fecha)}</span>
                   <span className="fondo-selected-tasa">{fmtPct(activePoint.tasa)}</span>
-                  <button className="fondo-clear-btn" onClick={() => setActivePoint(null)} aria-label="Limpiar selección">✕</button>
+                  <button
+                    className="fondo-clear-btn"
+                    onClick={() => setActivePoint(null)}
+                    aria-label="Limpiar selección"
+                  >
+                    ✕
+                  </button>
                 </div>
               ) : (
                 <p className="fondo-chart-hint">Haz clic en un punto para ver el detalle</p>
               )}
             </div>
           )}
-
+ 
           {isExpandable && (
             <button
               className="fondo-toggle-btn"
               onClick={() => setExpanded(false)}
-              aria-expanded={true}
+              aria-expanded="true"
               style={{ alignSelf: "center", marginTop: "1rem" }}
             >
               <span className="fondo-toggle-chevron fondo-toggle-chevron--up">›</span>
