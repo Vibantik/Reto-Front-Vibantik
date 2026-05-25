@@ -58,8 +58,8 @@ export function useChatbot(uuid) {
     scrollToBottom();
   }, [messages, streamingText, scrollToBottom]);
 
-  const sendMessage = async () => {
-    const raw = input.trim();
+  const sendMessage = useCallback(async (rawInput, options = {}) => {
+    const raw = String(rawInput ?? "").trim();
     if (!raw || loading) return;
 
     const { safe, text, reason } = sanitize(raw);
@@ -85,17 +85,17 @@ export function useChatbot(uuid) {
     abortRef.current = controller;
 
     try {
+      const payload = {
+        messages: updatedMessages
+          .map((message) => ({ role: message.role, content: message.content }))
+          .filter((message) => message.content),
+      };
+      if (options.model) payload.model = options.model;
+
       const res = await fetch(import.meta.env.VITE_API_URL + "/api/ia/agentic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages
-            .map((message) => ({
-              role: message.role,
-              content: message.content,
-            }))
-            .filter((message) => message.content),
-        }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
 
@@ -181,12 +181,12 @@ export function useChatbot(uuid) {
       setLoading(false);
       abortRef.current = null;
     }
-  };
+  }, [conversationId, loading, messages]);
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      sendMessage();
+      sendMessage(input);
     }
   };
 

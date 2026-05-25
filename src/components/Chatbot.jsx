@@ -1,9 +1,10 @@
+import { useEffect, useRef } from "react";
 import { useChatbot } from "./chatbotElements/useChatbot";
 import { X, Send } from "lucide-react";
 import PromptContainer from "./chatbotElements/PromptContainer";
 import ChatBubble from "./chatbotElements/ChatBubble";
 
-export default function Chatbot({ open, onClose, uuid }) {
+export default function Chatbot({ open, onClose, uuid, advisorPrompt, advisorRequestId }) {
   const { messages,
     input,
     setInput,
@@ -14,6 +15,20 @@ export default function Chatbot({ open, onClose, uuid }) {
     handleKeyDown,
     appendMessage,
   } = useChatbot(uuid);
+  const lastAutoRequestRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || !advisorPrompt || !advisorRequestId) return;
+    if (lastAutoRequestRef.current === advisorRequestId) return;
+
+    lastAutoRequestRef.current = advisorRequestId;
+    // advisorPrompt can be a string or an object { prompt, model }
+    if (typeof advisorPrompt === "string") {
+      sendMessage(advisorPrompt);
+    } else if (advisorPrompt && advisorPrompt.prompt) {
+      sendMessage(advisorPrompt.prompt, { model: advisorPrompt.model });
+    }
+  }, [open, advisorPrompt, advisorRequestId, sendMessage]);
 
   if (!open) return null;
 
@@ -72,7 +87,7 @@ export default function Chatbot({ open, onClose, uuid }) {
           />
           <button
             className="chatbot-send"
-            onClick={sendMessage}
+            onClick={() => sendMessage(input)}
             disabled={loading || !input.trim()}
           >
             <Send size={18} />

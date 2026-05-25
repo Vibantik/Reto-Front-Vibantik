@@ -73,6 +73,8 @@ export default function App() {
   });
 
   const [chatOpen, setChatOpen]     = useState(false);
+  const [investmentAdvisorPrompt, setInvestmentAdvisorPrompt] = useState(null);
+  const [investmentAdvisorRequestId, setInvestmentAdvisorRequestId] = useState(0);
   const [activeTab, setActiveTab]   = useState("Inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -100,9 +102,17 @@ export default function App() {
     setUuid(null);
     setActiveUser(null);
     setChatOpen(false);
+    setInvestmentAdvisorPrompt(null);
+    setInvestmentAdvisorRequestId(0);
     setSidebarOpen(false);
     setActiveTab("Inicio");
     setShowPicker(true);
+  };
+
+  const handleRequestInvestmentAdvice = (prompt) => {
+    setInvestmentAdvisorPrompt(prompt);
+    setInvestmentAdvisorRequestId(Date.now());
+    setChatOpen(true);
   };
 
   if (showPicker || !uuid) {
@@ -139,7 +149,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <InversionesPanel uuid={uuid} />
+              <InversionesPanel uuid={uuid} onRequestAdvice={handleRequestInvestmentAdvice} />
             </div>
           </main>
         );
@@ -194,7 +204,13 @@ export default function App() {
           <MessageCircle size={28} />
         </button>
       )}
-      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} uuid={uuid} />
+      <Chatbot
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        uuid={uuid}
+        advisorPrompt={investmentAdvisorPrompt}
+        advisorRequestId={investmentAdvisorRequestId}
+      />
     </div>
   );
 }
