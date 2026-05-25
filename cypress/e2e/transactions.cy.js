@@ -205,7 +205,6 @@ describe('Transacciones E2E', () => {
     })
   })
 
-<<<<<<< HEAD
   // ─────────────────────────────────────────────
   // CP-05 | CA0805
   // Validar listado vacío
@@ -609,14 +608,6 @@ describe('Transacciones E2E', () => {
       cy.wait('@getTransactions')
       cy.get('[data-cy="transaction-card"]').should('have.length', 1)
       cy.get('[data-cy="transaction-card"]').should('contain.text', 'OXXO')
-=======
-  it('filtra por búsqueda de OXXO', () => {
-    cy.get('[data-cy="transaction-search-input"]').clear().type('Oxxo')
-    // Esperamos a que los resultados se actualicen y ya no esté Starbucks
-    cy.get('[data-cy="transaction-card"]').should('not.contain.text', 'Starbucks')
-    cy.get('[data-cy="transaction-card"]').each(($card) => {
-      cy.wrap($card).invoke('text').should('match', /oxxo/i)
->>>>>>> 8de4a78f20b7302beca7a0e0c922b89246db1306
     })
   })
 })
