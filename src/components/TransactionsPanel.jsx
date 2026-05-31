@@ -1,6 +1,7 @@
 // src/components/TransactionsPanel.jsx
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { fetchTransactions } from "../services/transactionsService";
+import { useAgentRefresh } from "../utils/agentRefreshContext";
 import TransactionSearch from "./TransactionSearch";
 import TransactionFilters from "./TransactionFilters";
 import TransactionList from "./TransactionList";
@@ -26,37 +27,40 @@ function TransactionsPanel({ showChart = true }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
+  const { refreshTick } = useAgentRefresh();
+
   // Resetear página al cambiar filtros
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedType, selectedCategory, startDate, endDate]);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchTransactions({
+        page: currentPage,
+        limit: 15,
+        type: selectedType,
+        category: selectedCategory,
+        search: searchTerm,
+        startDate,
+        endDate,
+      });
+      setTransactions(result.data);
+      setPagination(result.pagination);
+    } catch (err) {
+      setError("No se pudieron cargar las transacciones.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
+
   // Fetch al backend cada vez que cambia página o filtros
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await fetchTransactions({
-          page: currentPage,
-          limit: 15,
-          type: selectedType,
-          category: selectedCategory,
-          search: searchTerm,
-          startDate,
-          endDate,
-        });
-        setTransactions(result.data);
-        setPagination(result.pagination);
-      } catch (err) {
-        setError("No se pudieron cargar las transacciones.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     load();
-  }, [currentPage, searchTerm, selectedType, selectedCategory, startDate, endDate]);
+  }, [load, refreshTick.Movimientos]);
 
   useEffect(() => {
     const eventSource = new EventSource(SSE_URL);

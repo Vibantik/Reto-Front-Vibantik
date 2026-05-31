@@ -1,6 +1,7 @@
 // src/components/InversionesPanel.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { fetchInversiones } from "../services/inversionesService";
+import { useAgentRefresh } from "../utils/agentRefreshContext";
 import InversionCard from "./InversionCard";
 import FondoCard from "./FondoCard";
 import "./css/inversiones.css";
@@ -10,23 +11,26 @@ function InversionesPanel({ uuid }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const { refreshTick } = useAgentRefresh();
+
+  const load = useCallback(async () => {
     if (!uuid) return;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchInversiones(uuid);
-        setInversiones(data);
-      } catch (err) {
-        setError("No se pudieron cargar las inversiones.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchInversiones(uuid);
+      setInversiones(data);
+    } catch (err) {
+      setError("No se pudieron cargar las inversiones.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [uuid]);
+
+  useEffect(() => {
+    load();
+  }, [load, refreshTick.Inversiones]);
 
   const esFondo = (inv) => inv.tipo?.toLowerCase() == "fondo de inversión";
 

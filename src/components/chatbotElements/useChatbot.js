@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { sanitize } from "./sanitizer";
+import { sendAgentMessage } from "../../services/agentService";
+import { useAgentRefresh } from "../../utils/agentRefreshContext";
 
 const INITIAL_MESSAGES = [
   {
@@ -19,10 +21,14 @@ export function useChatbot(uuid) {
   const messagesEndRef = useRef(null);
   const abortRef = useRef(null);
 
+  // Contexto de refresh de módulos
+  const { triggerRefresh } = useAgentRefresh();
+
   const appendMessage = useCallback((message) => {
     setMessages((prev) => [...prev, message]);
   }, []);
 
+  // Cuando cambia el usuario, resetear e iniciar conversación
   useEffect(() => {
     if (!uuid) return;
     setMessages(INITIAL_MESSAGES);
@@ -30,7 +36,6 @@ export function useChatbot(uuid) {
     setStreamingText("");
 
     const uuid_de_usuario = uuid;
-
     const initConversation = async () => {
       try {
         const res = await fetch(import.meta.env.VITE_API_URL + "/api/chat/conversation", {
@@ -43,7 +48,7 @@ export function useChatbot(uuid) {
           setConversationId(data.id_conv);
         }
       } catch (err) {
-        console.error("Error al iniciar la conversaciÃ³n en el backend:", err);
+        console.error("Error al iniciar la conversación en el backend:", err);
       }
     };
 
@@ -58,6 +63,180 @@ export function useChatbot(uuid) {
     scrollToBottom();
   }, [messages, streamingText, scrollToBottom]);
 
+  // ── Handler cuando el usuario confirma una propuesta ──────────────────────
+  const handleProposalConfirm = useCallback(
+    (result) => {
+      // Sustituir la tarjeta de propuesta por la tarjeta de resultado
+      setMessages((prev) => {
+        const withoutProposal = prev.filter((m) => m.type !== "action_proposal");
+        return [
+          ...withoutProposal,
+          { role: "assistant", type: "action_result", data: result },
+        ];
+      });
+
+      if (result.success && result.tool) {
+        triggerRefresh(result.tool);
+      }
+    },
+    [triggerRefresh]
+  );
+
+  // ── Handler cuando el usuario cancela una propuesta ───────────────────────
+  const handleProposalCancel = useCallback(() => {
+    setMessages((prev) => {
+      const withoutProposal = prev.filter((m) => m.type !== "action_proposal");
+      return [
+        ...withoutProposal,
+        {
+          role: "assistant",
+          type: "text",
+          content: "Acción cancelada. ¿Hay algo más en lo que pueda ayudarte?",
+        },
+      ];
+    });
+  }, []);
+
+  // ── Procesar respuesta JSON del agente ────────────────────────────────────
+  const handleJsonResponse = useCallback(
+    (data, originalText) => {
+      switch (data.type) {
+        case "action_proposal":
+          appendMessage({
+            role: "assistant",
+            type: "action_proposal",
+            data,
+            content: data.message,
+          });
+          break;
+
+        case "action_result":
+          appendMessage({
+            role: "assistant",
+            type: "action_result",
+            data,
+            content: data.message,
+          });
+          if (data.success && data.tool) {
+            triggerRefresh(data.tool);
+          }
+          break;
+
+        case "agent_error":
+          if (data.code === "TOKEN_EXPIRED") {
+            appendMessage({
+              role: "assistant",
+              type: "text",
+              content:
+                "⏰ La sesión de confirmación expiró. Por favor intenta de nuevo tu solicitud.",
+            });
+            // Re-enviar el mensaje original automáticamente
+            if (originalText) {
+              setTimeout(() => {
+                setInput(originalText);
+              }, 400);
+            }
+          } else if (data.code === "PARAMS_INCOMPLETE") {
+            const missing = data.meta?.missing_fields ?? [];
+            appendMessage({
+              role: "assistant",
+              type: "agent_error",
+              data,
+              content: data.message,
+              missingFields: missing,
+            });
+          } else {
+            appendMessage({
+              role: "assistant",
+              type: "text",
+              content: data.message || "Ocurrió un error inesperado. Intenta de nuevo.",
+            });
+          }
+          break;
+
+        default:
+          // Respuesta JSON desconocida — mostrar como texto
+          appendMessage({
+            role: "assistant",
+            type: "text",
+            content: data.message || JSON.stringify(data),
+          });
+      }
+    },
+    [appendMessage, triggerRefresh]
+  );
+
+  // ── Procesar stream NDJSON (igual que antes) ──────────────────────────────
+  const handleStream = useCallback(
+    async (reader, decoder, text, conversId) => {
+      let accumulated = "";
+      let toolPayload = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line);
+
+            if (json.type === "ui_tool") {
+              toolPayload = {
+                role: "assistant",
+                type: "ui_tool",
+                tool: json.tool,
+                data: json.data || {},
+                content:
+                  json.message?.content ||
+                  "Te compartí una herramienta interactiva para continuar.",
+              };
+            }
+
+            if (json.message?.content && json.type !== "ui_tool") {
+              accumulated += json.message.content;
+              setStreamingText(accumulated);
+            }
+          } catch {
+            // chunk malformado — ignorar
+          }
+        }
+      }
+
+      if (toolPayload) {
+        setMessages((prev) => [...prev, toolPayload]);
+      } else if (accumulated.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", type: "text", content: accumulated },
+        ]);
+      }
+      setStreamingText("");
+
+      // Persistir en historial de conversación
+      const responseToPersist = toolPayload?.content || accumulated;
+      if (conversId && responseToPersist.trim()) {
+        try {
+          await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id_conv: conversId,
+              mensaje_usuario: text,
+              respuesta_ia: responseToPersist,
+            }),
+          });
+        } catch (postErr) {
+          console.error("Error guardando el mensaje:", postErr);
+        }
+      }
+    },
+    []
+  );
+
+  // ── sendMessage ───────────────────────────────────────────────────────────
   const sendMessage = async () => {
     const raw = input.trim();
     if (!raw || loading) return;
@@ -84,86 +263,20 @@ export function useChatbot(uuid) {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Historial limpio para el backend (solo role + content)
+    const apiMessages = updatedMessages
+      .map((m) => ({ role: m.role, content: m.content }))
+      .filter((m) => m.content);
+
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + "/api/ia/agentic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages
-            .map((message) => ({
-              role: message.role,
-              content: message.content,
-            }))
-            .filter((message) => message.content),
-        }),
-        signal: controller.signal,
-      });
+      const response = await sendAgentMessage(apiMessages, uuid, controller.signal);
 
-      if (!res.ok) throw new Error("Error al conectar con el backend");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-      let toolPayload = null;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter(Boolean);
-
-        for (const line of lines) {
-          try {
-            const json = JSON.parse(line);
-
-            if (json.type === "ui_tool") {
-              toolPayload = {
-                role: "assistant",
-                type: "ui_tool",
-                tool: json.tool,
-                data: json.data || {},
-                content:
-                  json.message?.content ||
-                  "Te comparti una herramienta interactiva para continuar.",
-              };
-            }
-
-            if (json.message?.content && json.type !== "ui_tool") {
-              accumulated += json.message.content;
-              setStreamingText(accumulated);
-            }
-          } catch {
-            // skip malformed JSON chunks
-          }
-        }
-      }
-
-      if (toolPayload) {
-        setMessages((prev) => [...prev, toolPayload]);
-      } else if (accumulated.trim()) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", type: "text", content: accumulated },
-        ]);
-      }
-      setStreamingText("");
-
-      const responseToPersist = toolPayload?.content || accumulated;
-      if (conversationId && responseToPersist.trim()) {
-        try {
-          await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id_conv: conversationId,
-              mensaje_usuario: text,
-              respuesta_ia: responseToPersist,
-            }),
-          });
-        } catch (postErr) {
-          console.error("Error guardando el mensaje:", postErr);
-        }
+      if (response.jsonResponse) {
+        // Respuesta agentic JSON
+        handleJsonResponse(response.jsonResponse, text);
+      } else {
+        // Stream NDJSON
+        await handleStream(response.reader, response.decoder, text, conversationId);
       }
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -174,7 +287,7 @@ export function useChatbot(uuid) {
           role: "assistant",
           type: "text",
           content:
-            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama estÃ© corriendo",
+            "Lo siento, no pude conectarme al servidor. Verifica tu conexión e intenta de nuevo.",
         },
       ]);
     } finally {
@@ -200,5 +313,7 @@ export function useChatbot(uuid) {
     sendMessage,
     handleKeyDown,
     appendMessage,
+    handleProposalConfirm,
+    handleProposalCancel,
   };
 }
