@@ -9,11 +9,13 @@ const PARAM_LABELS = {
   plazo_dias: "Plazo (días)",
   nombre: "Nombre",
   monto: "Monto",
+  monto_limite: "Limite",
   descripcion: "Descripción",
   categoria: "Categoría",
   tipo: "Tipo",
   tasa: "Tasa",
   plazo: "Plazo",
+  id_presupuesto: "Presupuesto",
 };
 
 function formatParamValue(key, value) {

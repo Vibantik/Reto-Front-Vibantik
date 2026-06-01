@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { sanitize } from "./sanitizer";
+import { useAgentRefresh } from "../../utils/agentRefreshContext";
 
 const INITIAL_MESSAGES = [
   {
@@ -10,6 +11,7 @@ const INITIAL_MESSAGES = [
 ];
 
 export function useChatbot(uuid) {
+  const { triggerRefresh } = useAgentRefresh();
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -110,7 +112,7 @@ export function useChatbot(uuid) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = "";
-      let toolPayload = null;
+      let structuredPayload = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -124,7 +126,7 @@ export function useChatbot(uuid) {
             const json = JSON.parse(line);
 
             if (json.type === "ui_tool") {
-              toolPayload = {
+              structuredPayload = {
                 role: "assistant",
                 type: "ui_tool",
                 tool: json.tool,
@@ -135,7 +137,42 @@ export function useChatbot(uuid) {
               };
             }
 
-            if (json.message?.content && json.type !== "ui_tool") {
+            if (json.type === "action_proposal") {
+              structuredPayload = {
+                role: "assistant",
+                type: "action_proposal",
+                data: json.data || {},
+                content:
+                  json.data?.message ||
+                  "Tengo una propuesta de accion lista para confirmar.",
+              };
+            }
+
+            if (json.type === "action_result") {
+              structuredPayload = {
+                role: "assistant",
+                type: "action_result",
+                data: json,
+                content: json.message || "",
+              };
+            }
+
+            if (json.type === "agent_error") {
+              structuredPayload = {
+                role: "assistant",
+                type: "agent_error",
+                content:
+                  json.content ||
+                  json.message ||
+                  "Necesito mas datos antes de preparar esa accion.",
+                missingFields: json.missingFields || [],
+              };
+            }
+
+            if (
+              json.message?.content &&
+              !["ui_tool", "action_proposal", "action_result", "agent_error"].includes(json.type)
+            ) {
               accumulated += json.message.content;
               // corte del json q se recibe
               const trimmed = accumulated.trimStart();
@@ -164,8 +201,8 @@ export function useChatbot(uuid) {
         // Not JSON, use accumulated as-is
       }
 
-      if (toolPayload) {
-        setMessages((prev) => [...prev, toolPayload]);
+      if (structuredPayload) {
+        setMessages((prev) => [...prev, structuredPayload]);
       } else if (finalContent.trim()) {
         setMessages((prev) => [
           ...prev,
@@ -174,7 +211,7 @@ export function useChatbot(uuid) {
       }
       setStreamingText("");
 
-      const responseToPersist = toolPayload?.content || finalContent;
+      const responseToPersist = structuredPayload?.content || finalContent;
       if (conversationId && responseToPersist.trim()) {
         try {
           await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
@@ -215,6 +252,30 @@ export function useChatbot(uuid) {
     }
   };
 
+  const handleProposalConfirm = useCallback(
+    (result) => {
+      if (result?.tool) {
+        triggerRefresh(result.tool);
+      }
+
+      appendMessage({
+        role: "assistant",
+        type: "action_result",
+        data: result,
+        content: result?.message || "",
+      });
+    },
+    [appendMessage, triggerRefresh]
+  );
+
+  const handleProposalCancel = useCallback(() => {
+    appendMessage({
+      role: "assistant",
+      type: "text",
+      content: "Accion cancelada. No hice cambios.",
+    });
+  }, [appendMessage]);
+
   return {
     messages,
     input,
@@ -225,5 +286,7 @@ export function useChatbot(uuid) {
     sendMessage,
     handleKeyDown,
     appendMessage,
+    handleProposalConfirm,
+    handleProposalCancel,
   };
 }
