@@ -42,7 +42,7 @@ const SQL_PATTERNS = [
   /\bexec(?:\s|\+)+(xp|sp)\w+/i, 
   /(\%27)|(\’)|(\-\-)|(\%23)|(#)/i, // Encoded and plain SQL meta-characters
   /(=|%3D)[^\n]*(['"%;]|--|\bOR\b|\bAND\b)/i, // = or %3D
-  /\b\w*['"]?\s*or\s+\w+/i, // OR-based injection
+  /(?:^|[^a-z])\bor\b\s+/i, // OR-based injection (para skipear palabras como "mayor" en queries del usuario)
 ];
 
 

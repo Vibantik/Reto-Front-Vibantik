@@ -89,6 +89,12 @@ export function useChatbot(uuid) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          uuid_de_usuario: uuid,
+          conversation_id: conversationId,
+          agent_preferences: {
+            enable_finance_agent: true,
+            allow_ui_tools: true,
+          },
           messages: updatedMessages
             .map((message) => ({
               role: message.role,
@@ -131,25 +137,44 @@ export function useChatbot(uuid) {
 
             if (json.message?.content && json.type !== "ui_tool") {
               accumulated += json.message.content;
-              setStreamingText(accumulated);
+              // corte del json q se recibe
+              const trimmed = accumulated.trimStart();
+              const looksLikeJson = trimmed.startsWith("{") || trimmed.startsWith("```");
+              if (!looksLikeJson) {
+                setStreamingText(accumulated);
+              }
             }
           } catch {
-            // skip malformed JSON chunks
+            // skip pedazos malformados del JSON
           }
         }
       }
 
+      // arreglo estructura del json de gemini 
+      let finalContent = accumulated;
+      try {
+        const stripped = accumulated.trim()
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/, "");
+        const parsed = JSON.parse(stripped);
+        if (parsed && typeof parsed.mensaje_texto === "string") {
+          finalContent = parsed.mensaje_texto;
+        }
+      } catch {
+        // Not JSON, use accumulated as-is
+      }
+
       if (toolPayload) {
         setMessages((prev) => [...prev, toolPayload]);
-      } else if (accumulated.trim()) {
+      } else if (finalContent.trim()) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", type: "text", content: accumulated },
+          { role: "assistant", type: "text", content: finalContent },
         ]);
       }
       setStreamingText("");
 
-      const responseToPersist = toolPayload?.content || accumulated;
+      const responseToPersist = toolPayload?.content || finalContent;
       if (conversationId && responseToPersist.trim()) {
         try {
           await fetch(import.meta.env.VITE_API_URL + "/api/chat/message", {
@@ -174,7 +199,7 @@ export function useChatbot(uuid) {
           role: "assistant",
           type: "text",
           content:
-            "Lo siento, no pude conectarme al servidor de IA. Verifica que Ollama estÃ© corriendo",
+            "Lo siento, no pude conectarme al servidor de IA. Por favor intenta de nuevo.",
         },
       ]);
     } finally {
