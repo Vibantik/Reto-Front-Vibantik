@@ -527,16 +527,18 @@
   margin-top: 28px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
 .pagination-pages {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+  flex-wrap: nowrap;
 }
 
 .pagination-btn,
@@ -555,9 +557,30 @@
   transition: all 0.2s ease;
 }
 
+.pagination-btn {
+  min-width: 112px;
+}
+
+.pagination-number {
+  padding: 0;
+}
+
 .pagination-number.active {
   background: #eb0029;
   color: #ffffff;
+  box-shadow: 0 10px 20px rgba(235, 0, 41, 0.24);
+}
+
+.pagination-dots {
+  min-width: 34px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #7b868c;
+  font-family: "Gotham", "Roboto", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .pagination-btn:disabled,
@@ -569,16 +592,33 @@
 .pagination-btn:hover:not(:disabled),
 .pagination-number:hover:not(.active) {
   background: #f4f7f8;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
   .pagination {
-    flex-direction: column;
-    align-items: stretch;
+    gap: 10px;
   }
 
   .pagination-pages {
-    justify-content: center;
+    order: -1;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .pagination-pages::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .pagination-pages::-webkit-scrollbar-thumb {
+    background: rgba(91, 102, 112, 0.25);
+    border-radius: 999px;
+  }
+
+  .pagination-btn {
+    flex: 1;
+    min-width: 0;
   }
 }
 .transaction-card__avatar {
