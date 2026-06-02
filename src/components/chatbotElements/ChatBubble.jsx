@@ -1,10 +1,9 @@
 import BudgetWizardWidget from "./tools/BudgetWizardWidget";
-import ActionProposalCard from "./ActionProposalCard";
-import ActionResultCard from "./ActionResultCard";
-import "./css/agentCards.css";
+import GoalWizardWidget from "./tools/GoalWizardWidget";
 
 const TOOL_COMPONENTS = {
   generate_budget_wizard: BudgetWizardWidget,
+  generate_goal_wizard: GoalWizardWidget,
 };
 
 export default function ChatBubble({
@@ -13,10 +12,6 @@ export default function ChatBubble({
   content,
   streaming = false,
   onToolComplete,
-  onProposalConfirm,
-  onProposalCancel,
-  uuid,
-  onNavigate,
 }) {
   const resolvedMessage = message || {
     role,
@@ -25,58 +20,28 @@ export default function ChatBubble({
   };
 
   const side = resolvedMessage.role === "user" ? "user" : "bot";
+
   const ToolComponent = resolvedMessage.tool
     ? TOOL_COMPONENTS[resolvedMessage.tool]
     : null;
 
-  // Si es un error de agente (missing fields), mostramos algo especial o simplemente el content normal.
-  const isAgentAction = 
-    resolvedMessage.type === "action_proposal" || 
-    resolvedMessage.type === "action_result" ||
-    resolvedMessage.type === "agent_error";
-
-  // Render especial para los nuevos tipos agentic
-  if (resolvedMessage.type === "action_proposal") {
-    return (
-      <ActionProposalCard
-        proposal={resolvedMessage.data}
-        uuid={uuid}
-        onConfirm={onProposalConfirm}
-        onCancel={onProposalCancel}
-      />
-    );
-  }
-
-  if (resolvedMessage.type === "action_result") {
-    return (
-      <ActionResultCard
-        result={resolvedMessage.data}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
   return (
-    <div className={`chat-bubble ${side} bubble-enter ${resolvedMessage.type === "agent_error" ? "agent-error-bubble" : ""}`}>
-      {resolvedMessage.content ? (
-        <div>
-          {resolvedMessage.content}
-          {resolvedMessage.type === "agent_error" && resolvedMessage.missingFields && (
-            <div className="missing-fields-alert">
-              Faltan datos: {resolvedMessage.missingFields.join(", ")}
-            </div>
-          )}
-        </div>
-      ) : null}
+    <div className={`chat-bubble ${side} bubble-enter`}>
+      {resolvedMessage.content ? <div>{resolvedMessage.content}</div> : null}
 
       {resolvedMessage.type === "ui_tool" && ToolComponent ? (
-        <ToolComponent data={resolvedMessage.data} onComplete={onToolComplete} />
+        <ToolComponent
+          data={resolvedMessage.data}
+          onComplete={onToolComplete}
+        />
       ) : null}
 
-      {resolvedMessage.type === "ui_tool" && resolvedMessage.tool && !ToolComponent ? (
+      {resolvedMessage.type === "ui_tool" &&
+      resolvedMessage.tool &&
+      !ToolComponent ? (
         <div>
-          Este widget interactivo no esta disponible por ahora. Visita la pestana
-          de Presupuestos para continuar.
+          Este widget interactivo no está disponible por ahora. Visita la
+          pestaña correspondiente para continuar.
         </div>
       ) : null}
 
