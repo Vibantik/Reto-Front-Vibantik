@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { CalendarDays, Flag, Target } from "lucide-react";
 import { createMeta, deleteMeta, fetchMetas, updateMeta } from "../services/metasService";
 import { getUserUuid } from "../utils/userUuid";
+import { useAgentRefresh } from "../utils/agentRefreshContext";
 import "./css/metas.css";
 
 const ITEMS_PER_PAGE = 10;
@@ -78,6 +79,8 @@ function MetasPanel({ uuid }) {
     fechaFin: "",
   });
 
+  const { refreshTick } = useAgentRefresh();
+
   const todayInput = useMemo(() => {
     const now = new Date();
     const local = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -87,24 +90,24 @@ function MetasPanel({ uuid }) {
     return `${yyyy}-${mm}-${dd}`;
   }, []);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      setActionError(null);
-      try {
-        const data = await fetchMetas(uuid);
-        setMetas(data);
-      } catch (err) {
-        setError("No se pudieron cargar las metas.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setActionError(null);
+    try {
+      const data = await fetchMetas(uuid);
+      setMetas(data);
+    } catch (err) {
+      setError("No se pudieron cargar las metas.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [uuid]);
+
+  useEffect(() => {
+    load();
+  }, [load, refreshTick.Metas]);
 
   const totalObjetivo = useMemo(
     () => metas.reduce((sum, meta) => sum + Number(meta.monto || 0), 0),

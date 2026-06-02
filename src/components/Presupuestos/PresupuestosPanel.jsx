@@ -8,6 +8,7 @@ import {
 } from "../../services/presupuestosService";
 import { subscribeToTransactionStream } from "../../services/transactionsStream";
 import { getUserUuid } from "../../utils/userUuid";
+import { useAgentRefresh } from "../../utils/agentRefreshContext";
 import "./presupuestos.css";
 
 import HubView            from "./VistaPrincipal/HubView.jsx";
@@ -41,6 +42,7 @@ export default function PresupuestosPanel({ uuid }) {
     fin: "",
   });
 
+  const { refreshTick } = useAgentRefresh();
 
 
   //datos iniciales
@@ -76,7 +78,7 @@ export default function PresupuestosPanel({ uuid }) {
     }
   }, [uuid, selectedPresId]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData, refreshTick.Presupuestos]);
 
   // detalle presupuesto 
   useEffect(() => {

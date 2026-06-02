@@ -15,6 +15,7 @@ import { fetchInversiones } from "./services/inversionesService";
 import ReportesPanel from "./components/ReportesPanel";
 import UserPicker from "./components/UserPicker";
 import { getSession, setSession, clearSession, getActiveUser } from "./utils/session";
+import { AgentRefreshProvider } from "./utils/agentRefreshContext";
 
 import "./App.css";
 
@@ -180,21 +181,28 @@ export default function App() {
   };
 
   return (
-    <div className="app">
-      <Header
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        activeUser={activeUser}
-      />
-      <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
-      {renderContent()}
-      {!chatOpen && (
-        <button className="fab" onClick={() => setChatOpen(true)}>
-          <MessageCircle size={28} />
-        </button>
-      )}
-      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} uuid={uuid} />
-    </div>
+    <AgentRefreshProvider>
+      <div className="app">
+        <Header
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          activeUser={activeUser}
+        />
+        <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
+        {renderContent()}
+        {!chatOpen && (
+          <button className="fab" onClick={() => setChatOpen(true)}>
+            <MessageCircle size={28} />
+          </button>
+        )}
+        <Chatbot 
+          open={chatOpen} 
+          onClose={() => setChatOpen(false)} 
+          uuid={uuid}
+          onNavigate={setActiveTab} 
+        />
+      </div>
+    </AgentRefreshProvider>
   );
 }
