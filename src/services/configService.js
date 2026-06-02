@@ -1,6 +1,8 @@
-const API_URL = 'http://localhost:3000';
+import { getUserUuid } from "../utils/userUuid";
 
-export const fetchUserSettings = async (uuid) => {
+const API_URL = import.meta.env.VITE_API_URL;
+
+export const fetchUserSettings = async (uuid = getUserUuid()) => {
     try {
         const response = await fetch(`${API_URL}/api/settings/${uuid}`);
 
@@ -24,7 +26,7 @@ export const fetchUserSettings = async (uuid) => {
     }
 };
 
-export const saveUserSettings = async (uuid, toggleStates) => {
+export const saveUserSettings = async (uuid = getUserUuid(), toggleStates) => {
     try {
         const payload = {
             uuid_de_usuario: uuid,

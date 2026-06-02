@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import Header from "./components/Header";
 import ExpensesChart from "./components/ExpensesChart";
@@ -7,14 +7,107 @@ import Chatbot from "./components/Chatbot";
 import TransactionsPanel from "./components/TransactionsPanel";
 import InversionesPanel from "./components/InversionesPanel";
 import PresupuestosPanel from "./components/Presupuestos/PresupuestosPanel";
+import PresupuestoInfoCard from "./components/PresupuestoInfoCard";
 import MetasPanel from "./components/MetasPanel";
 import Sidebar from "./components/Sidebar";
+import SugerenciasCard from "./components/SugerenciasCard";
+import { fetchInversiones } from "./services/inversionesService";
+import ReportesPanel from "./components/ReportesPanel";
+import UserPicker from "./components/UserPicker";
+import { getSession, setSession, clearSession, getActiveUser } from "./utils/session";
+
 import "./App.css";
 
+function InversionInfoCard({ uuid }) {
+  const [resumen, setResumen] = useState(null);
+ 
+  useEffect(() => {
+    if (!uuid) return;
+    fetchInversiones(uuid)
+      .then((data) => {
+        const hoy = new Date();
+        const activas = data.filter((i) => new Date(i.fecha_fin) > hoy);
+        const total = activas.reduce((s, i) => s + parseFloat(i.valor || 0), 0);
+        const en30dias = new Date();
+        en30dias.setDate(en30dias.getDate() + 30);
+        const porVencer = activas.filter((i) => new Date(i.fecha_fin) <= en30dias).length;
+        setResumen({ total, numActivas: activas.length, porVencer });
+      })
+      .catch(() => setResumen(null));
+  }, [uuid]);
+ 
+  const fmt = (n) =>
+    Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+ 
+  return (
+    <div className="card info-card">
+      {resumen ? (
+        <>
+          <p className="info-text-lg">
+            Tienes <strong>{resumen.numActivas} inversiones activas</strong> con un valor total de{" "}
+            <strong>{fmt(resumen.total)}</strong>.
+            {resumen.porVencer > 0 && (
+              <> <span style={{ color: "#EC0029" }}>{resumen.porVencer} vencen en los próximos 30 días.</span></>
+            )}
+          </p>
+          <button className="btn-action">Ver mis inversiones &gt;&gt;</button>
+        </>
+      ) : (
+        <>
+          <p className="info-text-lg">
+            Has recibido <strong>$5,008.32</strong> de tus inversiones en los últimos 15 días
+          </p>
+          <button className="btn-action">Reinvertir &gt;&gt;</button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
-  const [chatOpen, setChatOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Inicio");
+  const [uuid, setUuid]         = useState(() => getSession());
+  const [activeUser, setActiveUser] = useState(() => getActiveUser());
+  const [showPicker, setShowPicker] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("picker") || params.has("userpicker") || window.location.hash === "#userpicker";
+  });
+
+  const [chatOpen, setChatOpen]     = useState(false);
+  const [activeTab, setActiveTab]   = useState("Inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleSelectUser = (selectedUuid, userObj) => {
+    setSession(selectedUuid, userObj);
+    setUuid(selectedUuid);
+    setActiveUser(userObj);
+    setShowPicker(false);
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("picker");
+      url.searchParams.delete("userpicker");
+      if (url.hash === "#userpicker") {
+        url.hash = "";
+      }
+      window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSignOut = () => {
+    clearSession();
+    setUuid(null);
+    setActiveUser(null);
+    setChatOpen(false);
+    setSidebarOpen(false);
+    setActiveTab("Inicio");
+    setShowPicker(true);
+  };
+
+  if (showPicker || !uuid) {
+    return <UserPicker onSelect={handleSelectUser} />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -22,24 +115,15 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row">
-              <ExpensesChart />
-              <div className="card info-card">
-                <h2 className="greeting">¡Hola Ricardo!</h2>
-                <p className="info-text">
-                  Tus gastos recurrentes han aumentado <strong>$214.67</strong>
-                </p>
-                <button className="btn-action">Revisar sugerencias &gt;&gt;</button>
-              </div>
+              <ExpensesChart uuid={uuid} />
+              <SugerenciasCard uuid={uuid} />
             </div>
             <div className="dashboard-row">
-              <StocksPanel />
-              <div className="card info-card">
-                <p className="info-text-lg">
-                  Has recibido <strong>$5,008.32</strong> de tus inversiones en los
-                  últimos 15 días
-                </p>
-                <button className="btn-action">Reinvertir &gt;&gt;</button>
-              </div>
+              <StocksPanel uuid={uuid} />
+              <InversionInfoCard uuid={uuid} />
+            </div>
+            <div className="dashboard-row">
+              <PresupuestoInfoCard onViewDetails={() => setActiveTab("Presupuestos")} />
             </div>
           </main>
         );
@@ -55,7 +139,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <InversionesPanel />
+              <InversionesPanel uuid={uuid} />
             </div>
           </main>
         );
@@ -63,7 +147,7 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <PresupuestosPanel />
+              <PresupuestosPanel uuid={uuid} />
             </div>
           </main>
         );
@@ -71,7 +155,15 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row transactions-row">
-              <MetasPanel />
+              <MetasPanel uuid={uuid} />
+            </div>
+          </main>
+        );
+      case "Reportes":
+        return (
+          <main className="dashboard">
+            <div className="dashboard-row transactions-row">
+              <ReportesPanel />
             </div>
           </main>
         );
@@ -87,22 +179,22 @@ export default function App() {
     }
   };
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   return (
     <div className="app">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} toggleSidebar={toggleSidebar} />
-      <Sidebar isOpen={sidebarOpen} />
-
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        activeUser={activeUser}
+      />
+      <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
       {renderContent()}
-
       {!chatOpen && (
         <button className="fab" onClick={() => setChatOpen(true)}>
           <MessageCircle size={28} />
         </button>
       )}
-
-      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} />
+      <Chatbot open={chatOpen} onClose={() => setChatOpen(false)} uuid={uuid} />
     </div>
   );
 }

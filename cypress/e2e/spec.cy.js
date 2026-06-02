@@ -44,7 +44,9 @@ describe('My App E2E Tests', () => {
   })
 
   it('toggles a setting', () => {
+    cy.intercept('GET', '**/api/settings/*').as('getSettings')
     cy.get('.header-avatar').click()
+    cy.wait('@getSettings')
 
     // 1. toggle a la primera opción
     cy.get('.toggle-switch').first().click()

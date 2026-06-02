@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Save } from 'lucide-react';
+import { Save, LogOut } from 'lucide-react';
 import { fetchUserSettings, saveUserSettings } from '../services/configService';
-import { getUserUuid } from '../utils/userUuid';
 import './css/Sidebar.css';
 import '../App.css';
 
@@ -17,8 +16,8 @@ const MOCK_CONFIG_DATA = [
 
 const settingsData = MOCK_CONFIG_DATA;
 
-export default function Sidebar({ isOpen }) {
-    const userUuid = getUserUuid();
+export default function Sidebar({ isOpen, uuid, onSignOut }) {
+    const userUuid = uuid;
 
     const [toggles, setToggles] = useState(() => {
         const initialState = {};
@@ -29,6 +28,7 @@ export default function Sidebar({ isOpen }) {
     });
 
     useEffect(() => {
+        if (!userUuid) return;
         const loadSettings = async () => {
             const settingsFromServer = await fetchUserSettings(userUuid);
 
@@ -73,13 +73,22 @@ export default function Sidebar({ isOpen }) {
                         </li>
                     ))}
                 </ul>
-                <button
-                    className="btn-save btn-action"
-                    onClick={handleSave}
-                    style={{ marginLeft: '20px', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}
-                >
-                    <Save /> Guardar
-                </button>
+                <div className="sidebar-actions" style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+                    <button
+                        className="btn-save btn-action"
+                        onClick={handleSave}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', width: '100%' }}
+                    >
+                        <Save size={16} /> Guardar
+                    </button>
+                    <button
+                        className="btn-signout btn-action"
+                        onClick={onSignOut}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', width: '100%', background: '#7B868C' }}
+                    >
+                        <LogOut size={16} /> Cerrar Sesión
+                    </button>
+                </div>
             </div>
         </>
     );

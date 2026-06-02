@@ -1,5 +1,7 @@
 // src/services/presupuestosService.js
-const API_URL = "http://localhost:3000";
+import { getUserUuid } from "../utils/userUuid";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 //! ── Categorias ────────────────────────────────────────────────────────── 
 
@@ -39,7 +41,7 @@ export const deleteCategoria = async (id) => {
 
 //! ── Presupuestos ────────────────────────────────────────────────────────── 
 
-export const fetchPresupuestos = async (uuid, { activos = false } = {}) => {
+export const fetchPresupuestos = async (uuid = getUserUuid(), { activos = false } = {}) => {
   const query = new URLSearchParams();
   query.set("uuid", uuid);
   if (activos) query.set("activos", "true");
@@ -55,11 +57,31 @@ export const fetchPresupuesto = async (id) => {
   return response.json();
 };
 
+export const fetchLastPresupuesto = async (uuid = getUserUuid()) => {
+  const query = new URLSearchParams({ uuid });
+  const response = await fetch(`${API_URL}/api/presupuestos/last-month?${query}`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error("Error al obtener el ultimo presupuesto");
+  }
+
+  return response.json();
+};
+
 export const createPresupuesto = async (data) => {
+  const payload = {
+    ...data,
+    uuid_de_usuario: data?.uuid_de_usuario || getUserUuid(),
+  };
+
   const response = await fetch(`${API_URL}/api/presupuestos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
     const erroData = await response.json().catch(()=>({}));

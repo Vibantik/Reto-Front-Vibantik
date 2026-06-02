@@ -29,10 +29,10 @@ const movementDate = transaction.date
 	];
 
 	return (
-		<section className="movement-details" aria-label={`Detalle de ${transaction.description}`}>
+		<section className="movement-details" data-cy="movement-details" aria-label={`Detalle de ${transaction.description}`}>
 			<header className="movement-details__header">
 				<p>Detalle del movimiento</p>
-				<strong className={isIncome ? "movement-details__amount income" : "movement-details__amount expense"}>
+				<strong data-cy="movement-amount" className={isIncome ? "movement-details__amount income" : "movement-details__amount expense"}>
 					{amountPrefix}${transaction.amount.toLocaleString("es-MX", {
 						minimumFractionDigits: 2,
 						maximumFractionDigits: 2,
@@ -44,7 +44,7 @@ const movementDate = transaction.date
 				{details.map((item) => (
 					<div key={item.label} className="movement-details__row">
 						<dt>{item.label}</dt>
-						<dd>{item.value}</dd>
+						<dd data-cy={`movement-${item.label.replace(/\s+/g, "-").toLowerCase()}`}>{item.value}</dd>
 					</div>
 				))}
 			</dl>

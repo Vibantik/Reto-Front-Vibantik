@@ -40,9 +40,9 @@ const SQL_PATTERNS = [
   /\/\*.*?\*\//s,                   // block comment
   /xp_cmdshell/i,
   /\bexec(?:\s|\+)+(xp|sp)\w+/i, 
-  /(\%27)|(\’)|(\-\-)|(\%23)|(#)/i, // Encoded and plain SQL meta-characters
-  /(=|%3D)[^\n]*(['"%;]|--|\bOR\b|\bAND\b)/i, // = or %3D
-  /\b\w*['"]?\s*or\s+\w+/i, // OR-based injection
+  /(\%27)|(\-\-)|(\%23)/i,           // Encoded SQL meta-characters (%27=quote, --=comment, %23=hash)
+  /(=|%3D)[^\n]*([‘"%;]|--|\bOR\b|\bAND\b)/i, // = or %3D followed by SQL payload
+  /(?:[‘"])\s*(OR|AND)\s+[‘"]?\d/i, // quote-gated OR/AND injection (won’t catch "mayor", "del", etc.)
 ];
 
 
