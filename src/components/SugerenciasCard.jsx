@@ -311,7 +311,7 @@ export default function SugerenciasCard({ uuid }) {
           </div>
           <div className="sugerencias-meta-wrap">
             {iaActiva && <span className="sugerencias-badge">Generadas con IA</span>}
-            {errorIA && <span className="sugerencias-badge sugerencias-badge--error">Ollama no disponible</span>}
+            {errorIA && <span className="sugerencias-badge sugerencias-badge--error">IA no disponible</span>}
             <button
               className={`sugerencias-ia-btn ${loading ? "sugerencias-ia-btn--loading" : ""}`}
               onClick={handleIA}

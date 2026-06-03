@@ -956,7 +956,7 @@ export default function ReportesPanel() {
               textAlign: "center",
               marginTop: 8
             }}>
-              El análisis con IA puede tardar unos segundos. Requiere que Ollama esté corriendo.
+              El análisis con IA puede tardar unos segundos. Usa Ollama local o Gemini como respaldo.
             </p>
           )}
         </>

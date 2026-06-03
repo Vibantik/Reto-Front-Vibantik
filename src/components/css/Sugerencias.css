@@ -93,7 +93,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 1;
 }
  
 .sugerencia-item {
@@ -126,6 +125,10 @@
   line-height: 1.5;
 }
  
+.sugerencias-card > button {
+  margin-top: auto;
+}
+
 .sugerencias-skeleton {
   height: 62px;
   border-radius: 12px;
