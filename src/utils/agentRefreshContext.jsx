@@ -1,9 +1,5 @@
 import { createContext, useContext, useCallback, useState } from "react";
 
-/**
- * Mapeo de tool → módulo a refrescar.
- * El módulo coincide con los valores de activeTab en App.jsx.
- */
 const TOOL_TO_MODULE = {
   crear_meta: "Metas",
   actualizar_meta: "Metas",
@@ -17,10 +13,6 @@ const TOOL_TO_MODULE = {
 
 const AgentRefreshContext = createContext(null);
 
-/**
- * Provee una función `triggerRefresh(tool)` y un objeto `refreshTick`
- * que los módulos pueden observar para saber cuándo refrescarse.
- */
 export function AgentRefreshProvider({ children }) {
   // Cada módulo tiene un contador. Cuando sube, ese módulo debe refrescarse.
   const [refreshTick, setRefreshTick] = useState({
