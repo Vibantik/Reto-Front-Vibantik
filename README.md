@@ -4,8 +4,6 @@ Frontend del asistente financiero **Aura** para Banorte. Aplicación SPA constru
 
 ## Tecnologías
 
-| Tecnología | Versión |
-|---|---|
 React + Vite 
 Recharts
 Lucide React
@@ -28,9 +26,9 @@ VITE_API_URL=http://localhost:3000
 
 ```bash
 npm install
-npm run dev        # Dev server en http://localhost:5173
-npm run build      # Build de producción
-npm run preview    # Previsualizar build
+npm run dev
+npm run build     
+npm run preview   
 ```
 
 ## Módulos de la aplicación
