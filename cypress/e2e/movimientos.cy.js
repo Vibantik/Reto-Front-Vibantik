@@ -64,7 +64,7 @@ describe('Movimientos - CP defect log', () => {
 
   it('CP-03 al seleccionar movimiento muestra detalles', () => {
     cy.get('[data-cy="transaction-toggle"]').first().click();
-    cy.get('[data-cy="movement-details"]').should('be.visible');
+    cy.get('[data-cy="transaction-detail"]').should('be.visible');
     cy.get('[data-cy="movement-amount"]').should('contain.text', '250');
   });
 

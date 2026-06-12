@@ -1,12 +1,12 @@
 function TransactionFilters({
   selectedType,
-  setSelectedType,
+  onTypeChange,
   selectedCategory,
-  setSelectedCategory,
+  onCategoryChange,
   startDate,
-  setStartDate,
+  onStartDateChange,
   endDate,
-  setEndDate,
+  onEndDateChange,
 }) {
   return (
     <div className="filters-grid">
@@ -15,7 +15,7 @@ function TransactionFilters({
         <select
           data-cy="transaction-type-filter"
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
+          onChange={(e) => onTypeChange(e.target.value)}
         >
           <option value="all">Todos los movimientos</option>
           <option value="ingreso">Ingresos</option>
@@ -28,13 +28,17 @@ function TransactionFilters({
         <select
           data-cy="transaction-category-filter"
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => onCategoryChange(e.target.value)}
         >
           <option value="all">Todas las categorías</option>
           <option value="Ingreso">Ingreso</option>
           <option value="Comida">Comida</option>
           <option value="Transporte">Transporte</option>
           <option value="Entretenimiento">Entretenimiento</option>
+          <option value="Alimentación">Alimentación</option>
+          <option value="Compras">Compras</option>
+          <option value="Nómina">Nómina</option>
+          <option value="Servicios">Servicios</option>
         </select>
       </div>
 
@@ -44,7 +48,7 @@ function TransactionFilters({
           data-cy="transaction-start-date"
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => onStartDateChange(e.target.value)}
         />
       </div>
 
@@ -54,7 +58,7 @@ function TransactionFilters({
           data-cy="transaction-end-date"
           type="date"
           value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
+          onChange={(e) => onEndDateChange(e.target.value)}
         />
       </div>
     </div>

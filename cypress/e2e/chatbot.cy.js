@@ -409,8 +409,11 @@ describe("HU-07 · Chatbot Asesor IA E2E", () => {
       cy.get(".chatbot-input").type("test{enter}");
       cy.wait("@iaStream");
 
+      // Esperar que loading termine (input habilitado) antes de contar burbujas
+      cy.get(".chatbot-input").should("not.be.disabled");
+
       // Debe haber exactamente 1 burbuja más que al inicio (el mensaje consolidado)
-      cy.get(".chat-bubble.bot").then(($bubbles) => {
+      cy.get(".chat-bubble.bot").should(($bubbles) => {
         expect($bubbles.length).to.equal(initialBotMessages[0] + 1);
       });
     });

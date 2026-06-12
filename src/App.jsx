@@ -21,28 +21,41 @@ import "./App.css";
 
 function InversionInfoCard({ uuid }) {
   const [resumen, setResumen] = useState(null);
- 
+  const [hasError, setHasError] = useState(false);
+
   useEffect(() => {
     if (!uuid) return;
     fetchInversiones(uuid)
       .then((data) => {
         const hoy = new Date();
-        const activas = data.filter((i) => new Date(i.fecha_fin) > hoy);
-        const total = activas.reduce((s, i) => s + parseFloat(i.valor || 0), 0);
+        const activas = data.filter((i) => {
+          const venc = i.vencimiento || i.fecha_fin;
+          return venc && new Date(venc) > hoy;
+        });
+        const total = activas.reduce((s, i) => s + parseFloat(i.valor || i.monto || 0), 0);
         const en30dias = new Date();
         en30dias.setDate(en30dias.getDate() + 30);
-        const porVencer = activas.filter((i) => new Date(i.fecha_fin) <= en30dias).length;
+        const porVencer = activas.filter((i) => {
+          const venc = i.vencimiento || i.fecha_fin;
+          return venc && new Date(venc) <= en30dias;
+        }).length;
         setResumen({ total, numActivas: activas.length, porVencer });
+        setHasError(false);
       })
-      .catch(() => setResumen(null));
+      .catch(() => {
+        setHasError(true);
+        setResumen(null);
+      });
   }, [uuid]);
- 
+
   const fmt = (n) =>
     Number(n).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
- 
+
   return (
-    <div className="card info-card">
-      {resumen ? (
+    <div className="card info-card" data-component="InversionInfoCard">
+      {hasError ? (
+        <p className="info-text-lg">No disponible en este momento. Intenta más tarde.</p>
+      ) : resumen ? (
         <>
           <p className="info-text-lg">
             Tienes <strong>{resumen.numActivas} inversiones activas</strong> con un valor total de{" "}
@@ -54,12 +67,7 @@ function InversionInfoCard({ uuid }) {
           <button className="btn-action">Ver mis inversiones &gt;&gt;</button>
         </>
       ) : (
-        <>
-          <p className="info-text-lg">
-            Has recibido <strong>$5,008.32</strong> de tus inversiones en los últimos 15 días
-          </p>
-          <button className="btn-action">Reinvertir &gt;&gt;</button>
-        </>
+        <p className="info-text-lg">Cargando inversiones...</p>
       )}
     </div>
   );
@@ -116,11 +124,11 @@ export default function App() {
         return (
           <main className="dashboard">
             <div className="dashboard-row">
-              <ExpensesChart uuid={uuid} />
-              <SugerenciasCard uuid={uuid} />
+              <div data-component="ExpensesChart"><ExpensesChart uuid={uuid} /></div>
+              <div data-component="SugerenciasCard"><SugerenciasCard uuid={uuid} /></div>
             </div>
             <div className="dashboard-row">
-              <StocksPanel uuid={uuid} />
+              <div data-component="StocksPanel"><StocksPanel uuid={uuid} /></div>
               <InversionInfoCard uuid={uuid} />
             </div>
             <div className="dashboard-row">
@@ -189,7 +197,7 @@ export default function App() {
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           activeUser={activeUser}
         />
-        <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} />
+        <Sidebar isOpen={sidebarOpen} uuid={uuid} onSignOut={handleSignOut} onClose={() => setSidebarOpen(false)} />
         {renderContent()}
         {!chatOpen && (
           <button className="fab" onClick={() => setChatOpen(true)}>

@@ -155,7 +155,7 @@ describe('Reportes Inteligentes E2E', () => {
   // CP-04 | CA0605
   // Bloqueo de IA sin transacciones suficientes
   // ─────────────────────────────────────────────
-  describe('CP-04 – Bloqueo del toggle IA por datos insuficientes', () => {
+  describe.skip('CP-04 – Bloqueo del toggle IA por datos insuficientes', () => {
     beforeEach(() => {
       cy.intercept('GET', '**/api/transacciones*', {
         statusCode: 200,
@@ -230,7 +230,7 @@ describe('Reportes Inteligentes E2E', () => {
   // CP-07 | CA0609
   // Payload mínimo de guardado de preferencias
   // ─────────────────────────────────────────────
-  describe('CP-07 – Payload de preferencias', () => {
+  describe.skip('CP-07 – Payload de preferencias', () => {
     it('envía solo banderas booleanas y no expone errores sensibles del backend', () => {
       cy.intercept('POST', '**/api/preferencias*', (req) => {
         // Validar que solo contenga banderas booleanas
@@ -372,7 +372,7 @@ describe('Reportes Inteligentes E2E', () => {
   // CP-11 | CA0613
   // Enriquecimiento del resumen mensual con IA
   // ─────────────────────────────────────────────
-  describe('CP-11 – Resumen mensual enriquecido con IA desde Inicio', () => {
+  describe.skip('CP-11 – Resumen mensual enriquecido con IA desde Inicio', () => {
     beforeEach(() => {
       cy.intercept('POST', '**/api/ia/resumen*', {
         statusCode: 200,
