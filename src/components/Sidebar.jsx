@@ -16,7 +16,7 @@ const MOCK_CONFIG_DATA = [
 
 const settingsData = MOCK_CONFIG_DATA;
 
-export default function Sidebar({ isOpen, uuid, onSignOut }) {
+export default function Sidebar({ isOpen, uuid, onSignOut, onClose }) {
     const userUuid = uuid;
 
     const [toggles, setToggles] = useState(() => {
@@ -54,9 +54,17 @@ export default function Sidebar({ isOpen, uuid, onSignOut }) {
 
     return (
         <>
-            <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+            <aside data-testid="sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <h3>Configuración</h3>
+                    <button
+                        aria-label="cerrar"
+                        data-testid="close-sidebar"
+                        onClick={onClose}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}
+                    >
+                        ×
+                    </button>
                 </div>
 
                 <ul className="sidebar-list">
@@ -89,7 +97,7 @@ export default function Sidebar({ isOpen, uuid, onSignOut }) {
                         <LogOut size={16} /> Cerrar Sesión
                     </button>
                 </div>
-            </div>
+            </aside>
         </>
     );
 }

@@ -54,6 +54,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         type="button"
         className="pagination-btn"
+        data-cy="pagination-prev"
+        aria-label="página anterior"
         onClick={goToPrevious}
         disabled={currentPage === 1}
       >
@@ -61,6 +63,9 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       </button>
 
       <div className="pagination-pages">
+        <span data-cy="pagination-info" className="pagination-info">
+          página {currentPage} de {totalPages}
+        </span>
         {visiblePages.map((page, index) => {
           if (page === DOTS) {
             return (
@@ -93,6 +98,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         type="button"
         className="pagination-btn"
+        data-cy="pagination-next"
+        aria-label="página siguiente"
         onClick={goToNext}
         disabled={currentPage === totalPages}
       >

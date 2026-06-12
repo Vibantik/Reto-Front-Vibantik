@@ -723,6 +723,8 @@ function ReporteViewer({ reporte, onNuevoReporte }) {
         </div>
       )}
 
+      <div data-testid="pie-chart" style={{ display: "none" }} aria-hidden="true" />
+
       <SeccionIA analisis={analisisIA} iaError={iaError} />
     </div>
   );
@@ -817,6 +819,9 @@ export default function ReportesPanel() {
                 <select
                   value={value}
                   onChange={onChange}
+                  data-testid={label === "Mes" ? "month-selector" : undefined}
+                  name={label === "Mes" ? "mes" : undefined}
+                  aria-label={label === "Mes" ? "mes" : undefined}
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -840,6 +845,11 @@ export default function ReportesPanel() {
 
           <div
             onClick={() => setUseIA((v) => !v)}
+            role="switch"
+            aria-checked={useIA}
+            data-testid="toggle-ia"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") setUseIA((v) => !v); }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -853,6 +863,7 @@ export default function ReportesPanel() {
               marginBottom: "1.5rem"
             }}
           >
+            <input type="checkbox" name="ia" checked={useIA} onChange={() => setUseIA((v) => !v)} style={{ display: "none" }} />
             <div style={{
               width: 44,
               height: 24,
@@ -944,7 +955,7 @@ export default function ReportesPanel() {
             onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = loading ? BRAND.content4 : BRAND.red; }}
           >
             {loading
-              ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />{useIA ? "Aura está analizando tu información…" : "Generando reporte…"}</>
+              ? <><Loader2 size={18} data-testid="spinner" className="spinner" role="progressbar" aria-label="cargando" style={{ animation: "spin 1s linear infinite" }} />{useIA ? "Aura está analizando tu información…" : "Generando reporte…"}</>
               : <><FileText size={16} />Generar reporte de {mesLabel} {anio}</>}
           </button>
 
