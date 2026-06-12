@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 
-function TransactionSearch({ searchTerm, setSearchTerm }) {
+function TransactionSearch({ searchTerm, onSearchChange }) {
   return (
     <div className="banorte-search">
       <Search size={18} />
@@ -9,7 +9,7 @@ function TransactionSearch({ searchTerm, setSearchTerm }) {
         type="text"
         placeholder="Buscar por comercio o monto"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={(e) => onSearchChange(e.target.value)}
       />
     </div>
   );
