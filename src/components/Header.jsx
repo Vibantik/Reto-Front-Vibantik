@@ -6,7 +6,7 @@ const getInitials = (user) => {
 };
 
 export default function Header({ activeTab, onTabChange, toggleSidebar, activeUser }) {
-  const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos"];
+  const tabs = ["Inicio", "Presupuestos", "Inversiones", "Metas", "Reportes", "Movimientos", "Transferencias"];
 
   return (
     <header className="header">
@@ -27,14 +27,15 @@ export default function Header({ activeTab, onTabChange, toggleSidebar, activeUs
           ))}
         </nav>
         <div className="header-user">
-          <div
+          <button
             className="header-avatar"
             onClick={toggleSidebar}
-            style={{ cursor: "pointer" }}
+            aria-label="perfil"
+            data-testid="avatar"
             title={activeUser ? `${activeUser.nombre} ${activeUser.apellido} - Configuración` : "Configuración"}
           >
             {getInitials(activeUser)}
-          </div>
+          </button>
         </div>
       </div>
     </header>

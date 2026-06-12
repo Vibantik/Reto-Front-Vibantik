@@ -844,13 +844,10 @@ export default function ReportesPanel() {
           </div>
 
           <div
-            onClick={() => setUseIA((v) => !v)}
             role="switch"
             aria-checked={useIA}
-            data-testid="toggle-ia"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") setUseIA((v) => !v); }}
             style={{
+              position: "relative",
               display: "flex",
               alignItems: "center",
               gap: 12,
@@ -863,7 +860,14 @@ export default function ReportesPanel() {
               marginBottom: "1.5rem"
             }}
           >
-            <input type="checkbox" name="ia" checked={useIA} onChange={() => setUseIA((v) => !v)} style={{ display: "none" }} />
+            <input
+              type="checkbox"
+              name="ia"
+              data-testid="toggle-ia"
+              checked={useIA}
+              onChange={() => setUseIA((v) => !v)}
+              style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", zIndex: 1, width: "100%", height: "100%", margin: 0 }}
+            />
             <div style={{
               width: 44,
               height: 24,
