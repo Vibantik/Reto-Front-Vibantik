@@ -32,7 +32,7 @@ describe('<ChatBubble />', () => {
       />
     )
 
-    cy.get('.chat-bubble').should('contain.text', 'widget interactivo no esta disponible')
+    cy.get('.chat-bubble').should('contain.text', 'widget interactivo no está disponible')
   })
 
 

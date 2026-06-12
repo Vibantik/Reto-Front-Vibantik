@@ -18,7 +18,7 @@ import {
   getBarClass,
   normalizeText,
   sumForCategory,
-} from "../../../src/components/Presupuestos/utils/presupuestos.utils.js";
+} from "../../src/components/Presupuestos/utils/presupuestos.utils.js";
 
 // HU-01 | CP-12 (CA0112) – Cálculo de balance, ejecutado y porcentaje
 describe("HU-01 | CP-12 (CA0112) – Cálculo de balance, ejecutado y porcentaje", () => {
